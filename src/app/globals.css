@@ -170,3 +170,81 @@ html.lenis body {
     scroll-behavior: auto !important;
   }
 }
+
+/* Projects: cards that open up on hover (desktop pointers) and overlap the card below. */
+.pj {
+  transform-origin: 50% 0;
+  transition:
+    margin-bottom 0.55s cubic-bezier(0.2, 0.8, 0.2, 1),
+    transform 0.55s cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 0.55s;
+}
+.pj-zone {
+  height: 44px;
+  transition: height 0.55s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.pj-img {
+  transform: translateY(calc(100% - 30px));
+  transition: transform 0.55s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.pj-go {
+  transition:
+    background-color 0.25s,
+    transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.pj-go:hover,
+.pj-go:focus-visible {
+  background: radial-gradient(150% 260% at 100% 100%, #ffb347 0%, #ff7a1f 22%, #d4491a 48%, #6b230b 76%, #2a0f06 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 170, 100, 0.38);
+  transform: scale(1.08);
+}
+.pj-go:hover svg,
+.pj-go:focus-visible svg {
+  color: #fff !important;
+}
+.pj-cta-ic {
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.pj-cta:hover .pj-cta-ic,
+.pj-cta:focus-visible .pj-cta-ic {
+  transform: translate(4px, -4px);
+}
+.pj-veil {
+  transition: opacity 0.35s;
+}
+.pj-cell:has(:focus-visible) {
+  z-index: 30;
+}
+.pj-cell:has(:focus-visible) .pj {
+  margin-bottom: -200px;
+  transform: scale(1.035);
+  box-shadow: 0 36px 70px rgba(0, 0, 0, 0.6);
+}
+.pj-cell:has(:focus-visible) .pj-zone {
+  height: 244px;
+}
+.pj-cell:has(:focus-visible) .pj-img {
+  transform: translateY(0);
+}
+#projects:has(.pj-cell :focus-visible) .pj-veil {
+  opacity: 1;
+}
+@media (hover: hover) {
+  .pj-cell:hover {
+    z-index: 30;
+  }
+  .pj-cell:hover .pj {
+    margin-bottom: -200px;
+    transform: scale(1.035);
+    box-shadow: 0 36px 70px rgba(0, 0, 0, 0.6);
+  }
+  .pj-cell:hover .pj-zone {
+    height: 244px;
+  }
+  .pj-cell:hover .pj-img {
+    transform: translateY(0);
+  }
+  #projects:has(.pj-cell:hover) .pj-veil {
+    opacity: 1;
+  }
+}
