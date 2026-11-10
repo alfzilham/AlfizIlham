@@ -197,10 +197,10 @@ export function Contact() {
         </svg>
         <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-40 bg-[linear-gradient(180deg,#0a0a0a,rgba(10,10,10,0))]" />
         <Reveal className="mx-auto flex flex-col items-center gap-7 px-6 py-[clamp(96px,14vw,184px)] text-center">
-          <h2 className="max-w-[14ch] bg-[linear-gradient(180deg,#ffb347_0%,#ff7a1f_42%,#e2531a_100%)] bg-clip-text pb-[0.08em] font-sans text-[clamp(40px,6.4vw,80px)] leading-[1.08] font-medium tracking-[-0.035em] text-balance text-transparent">
+          <h2 className="max-w-[14ch] bg-[linear-gradient(180deg,#ffb347_0%,#ff7a1f_42%,#e2531a_100%)] bg-clip-text pb-[0.08em] font-display text-[clamp(40px,6.4vw,80px)] leading-[1.08] font-medium tracking-[-0.035em] text-balance text-transparent">
             Have a project in mind?
           </h2>
-          <p className="max-w-[46ch] text-[17px] leading-relaxed text-pretty text-fg/70">Open for freelance software, design and calligraphy work.</p>
+          <p className="max-w-[46ch] text-[17px] leading-[1.6] text-pretty text-fg/70">Open for freelance software, design and calligraphy work.</p>
           <a
             href={`mailto:${PROFILE.email}`}
             className="btn-grad inline-flex min-h-[52px] items-center justify-center gap-2.5 rounded-full px-7 text-[15px] font-semibold whitespace-nowrap text-white transition-transform duration-200 hover:-translate-y-0.5"
