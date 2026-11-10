@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Anton, Bricolage_Grotesque, Geist, Geist_Mono, Great_Vibes } from 'next/font/google';
 import { MotionProvider } from '@/components/motion-provider';
+import { SplashScreen } from '@/components/splash/splash-screen';
 import './globals.css';
 
 const bricolage = Bricolage_Grotesque({ subsets: ['latin'], variable: '--font-bricolage', display: 'swap', weight: ['500', '600', '700', '800'] });
@@ -41,6 +42,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${bricolage.variable} ${geist.variable} ${geistMono.variable} ${anton.variable} ${greatVibes.variable}`}>
       <body className="min-h-dvh bg-bg font-sans text-fg antialiased">
+        <noscript>
+          <style>{'#splash{display:none}'}</style>
+        </noscript>
+        <SplashScreen />
         <MotionProvider>{children}</MotionProvider>
       </body>
     </html>
