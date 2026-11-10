@@ -1,6 +1,6 @@
 'use client';
 
-import { DIST, DUR_IN, DUR_OUT, EASE, VIEWPORT } from '@/lib/motion';
+import { DIST, DUR_IN, DUR_OUT, EASE, MOTION_ENABLED, VIEWPORT } from '@/lib/motion';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowUpRight, ExternalLink, ImageIcon } from 'lucide-react';
@@ -166,13 +166,17 @@ export function Projects({ projects }: { projects: PublicProject[] }) {
       <Heading title="Selected projects" lead={projects.length ? 'Live apps, tools and automations I have shipped.' : 'New work is on its way. Meanwhile, everything I build is on GitHub.'} />
 
       <motion.div
-        initial="hidden"
-        whileInView="show"
-        viewport={VIEWPORT}
-        variants={{
-          hidden: { opacity: 0, y: DIST, transition: { duration: DUR_OUT, ease: EASE } },
-          show: { opacity: 1, y: 0, transition: { duration: DUR_IN, ease: EASE } },
-        }}
+        {...(MOTION_ENABLED
+          ? {
+              initial: 'hidden',
+              whileInView: 'show',
+              viewport: VIEWPORT,
+              variants: {
+                hidden: { opacity: 0, y: DIST, transition: { duration: DUR_OUT, ease: EASE } },
+                show: { opacity: 1, y: 0, transition: { duration: DUR_IN, ease: EASE } },
+              },
+            }
+          : {})}
         className="mt-12"
       >
         {/* Wide: columns of cards that open on hover */}
