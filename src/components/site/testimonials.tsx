@@ -1,5 +1,6 @@
 'use client';
 
+import { MOTION_ENABLED } from '@/lib/motion';
 import { Quote, Star } from 'lucide-react';
 import { initials } from '@/lib/utils';
 import { Heading, Glow } from './primitives';
@@ -42,7 +43,7 @@ function Row({ items, reverse }: { items: PublicTestimonial[]; reverse?: boolean
       <ul
         className={
           'flex w-max gap-5 px-5 ' +
-          (loop ? 'motion-safe:animate-[marquee_60s_linear_infinite] group-hover:[animation-play-state:paused] group-focus-within:[animation-play-state:paused] ' : '') +
+          (loop && MOTION_ENABLED ? 'motion-safe:animate-[marquee_60s_linear_infinite] group-hover:[animation-play-state:paused] group-focus-within:[animation-play-state:paused] ' : '') +
           (reverse ? '[animation-direction:reverse]' : '')
         }
       >
