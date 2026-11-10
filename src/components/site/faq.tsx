@@ -47,7 +47,7 @@ function Row({ f, base, isOpen, onToggle }: { f: FaqItem; base: string; isOpen: 
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
           >
             <p className="px-5 pb-5 text-[15px] leading-relaxed text-white/85">{f.a}</p>
           </motion.div>
