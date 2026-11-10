@@ -68,7 +68,7 @@ export function Services() {
 
         <div id="svc-panel" role="tabpanel" aria-labelledby={`svc-tab-${active}`} className="acc-surface relative min-h-[460px] overflow-hidden rounded-[28px] p-6 sm:p-8">
           <AnimatePresence mode="wait">
-            <motion.div key={active} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }} className="flex flex-col gap-6">
+            <motion.div key={active} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.45 }} className="flex flex-col gap-6">
               <span className="font-mono text-xs text-white/70">
                 {pad(active)} / {pad(SERVICES.length - 1)}
               </span>
