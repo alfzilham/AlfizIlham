@@ -43,7 +43,7 @@ const EXT: Record<string, string> = {
 
 export const ALLOWED_TYPES = Object.keys(EXT);
 
-export function newKey(folder: 'projects' | 'certificates', contentType: string) {
+export function newKey(folder: 'projects' | 'certificates' | 'avatars', contentType: string) {
   const ext = EXT[contentType] ?? 'bin';
   return `${folder}/${new Date().toISOString().slice(0, 7)}/${randomUUID()}.${ext}`;
 }
