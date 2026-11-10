@@ -3,11 +3,13 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
-import { ArrowLeft, Check, CheckCheck, Download, Inbox, Mail, MailX, Send, Trash2, TriangleAlert } from 'lucide-react';
+import { ArrowLeft, Check, CheckCheck, Inbox, Mail, MailX, Send, Trash2, TriangleAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TextArea } from '@/components/ui/field';
 import { Card, CardHead, Empty, PageTitle, TabLinks } from './ui';
 import { RowMenu } from './row-menu';
+import { ExportLinks } from './export-links';
+import { Pager, SearchBox } from './list-controls';
 import { useFeedback } from './feedback';
 import { deleteMessage, markAllRead, markMessageRead, replyToMessage } from '@/app/dashboard/actions';
 import { cn, formatTime, relativeDay } from '@/lib/utils';
@@ -38,6 +40,10 @@ export function MessagesView({
   unreadOnly,
   emailReady,
   explicit,
+  q,
+  page,
+  pages,
+  total,
 }: {
   list: Item[];
   selected: Selected | null;
@@ -45,21 +51,28 @@ export function MessagesView({
   unreadOnly: boolean;
   emailReady: boolean;
   explicit: boolean;
+  q: string;
+  page: number;
+  pages: number;
+  total: number;
 }) {
   const router = useRouter();
   const { toast, confirm } = useFeedback();
   const [pending, start] = useTransition();
-  const base = unreadOnly ? '/dashboard/messages?filter=unread&' : '/dashboard/messages?';
-
-  const exportCsv = () => {
-    const esc = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
-    const csv = ['name,service,preview,received', ...list.map((m) => [m.name, m.service, m.preview, m.createdAt].map(esc).join(','))].join('\n');
-    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `messages-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+  const query = (extra: Record<string, string | number | undefined> = {}) => {
+    const sp = new URLSearchParams();
+    if (unreadOnly) sp.set('filter', 'unread');
+    if (q) sp.set('q', q);
+    for (const [k, v] of Object.entries(extra)) if (v !== undefined && v !== '') sp.set(k, String(v));
+    const text = sp.toString();
+    return `/dashboard/messages${text ? `?${text}` : ''}`;
+  };
+  const withQ = (filter?: string) => {
+    const sp = new URLSearchParams();
+    if (filter) sp.set('filter', filter);
+    if (q) sp.set('q', q);
+    const text = sp.toString();
+    return `/dashboard/messages${text ? `?${text}` : ''}`;
   };
 
   return (
@@ -81,9 +94,7 @@ export function MessagesView({
             >
               Mark all read
             </Button>
-            <Button icon={<Download className="size-4" aria-hidden="true" />} onClick={exportCsv} disabled={!list.length}>
-              Export
-            </Button>
+            <ExportLinks kind="messages" />
           </>
         }
       />
@@ -100,20 +111,23 @@ export function MessagesView({
         <Card className={cn('!p-4 sm:!p-5', explicit && 'hidden lg:block')}>
           <CardHead
             title="Inbox"
-            subtitle={`${list.filter((m) => !m.read).length} unread`}
+            subtitle={`${total} message${total === 1 ? '' : 's'}${q ? ' found' : ''}`}
             right={
               <TabLinks
                 label="Inbox filter"
                 active={unreadOnly ? 'unread' : 'all'}
                 items={[
-                  { key: 'all', label: 'All', href: '/dashboard/messages' },
-                  { key: 'unread', label: 'Unread', href: '/dashboard/messages?filter=unread' },
+                  { key: 'all', label: 'All', href: withQ() },
+                  { key: 'unread', label: 'Unread', href: withQ('unread') },
                 ]}
               />
             }
           />
+          <div className="mb-3">
+            <SearchBox action="/dashboard/messages" q={q} keep={unreadOnly ? { filter: 'unread' } : undefined} placeholder="Search name, email or message" />
+          </div>
           {list.length === 0 ? (
-            <Empty icon={<Inbox />} title={unreadOnly ? 'No unread messages' : 'No messages yet'} body="Messages sent through the contact form show up here." />
+            <Empty icon={<Inbox />} title={q ? 'No matching messages' : unreadOnly ? 'No unread messages' : 'No messages yet'} body={q ? 'Try a different name, email or keyword.' : 'Messages sent through the contact form show up here.'} />
           ) : (
             <ul className="-mx-2 flex max-h-[640px] flex-col overflow-y-auto" data-lenis-prevent>
               {list.map((m) => {
@@ -121,7 +135,7 @@ export function MessagesView({
                 return (
                   <li key={m.id}>
                     <Link
-                      href={`${base}id=${m.id}`}
+                      href={query({ page: page > 1 ? page : undefined, id: m.id })}
                       scroll={false}
                       aria-current={on ? 'true' : undefined}
                       className={cn('flex gap-3 rounded-2xl px-3 py-3.5 transition-colors', on ? 'bg-white/[0.07] shadow-[inset_0_1px_0_rgba(255,255,255,0.14)]' : 'hover:bg-white/[0.04]')}
@@ -144,11 +158,12 @@ export function MessagesView({
               })}
             </ul>
           )}
+          <Pager page={page} pages={pages} total={total} hrefFor={(n) => query({ page: n > 1 ? n : undefined })} />
         </Card>
 
         {selected ? (
           <div className={cn(!explicit && 'hidden lg:block')}>
-          <Detail key={selected.id} m={selected} emailReady={emailReady} backHref={unreadOnly ? '/dashboard/messages?filter=unread' : '/dashboard/messages'} onDeleted={() => router.push('/dashboard/messages')} confirm={confirm} toast={toast} />
+          <Detail key={selected.id} m={selected} emailReady={emailReady} backHref={query({ page: page > 1 ? page : undefined })} onDeleted={() => router.push('/dashboard/messages')} confirm={confirm} toast={toast} />
           </div>
         ) : (
           <Card className="hidden lg:block">
