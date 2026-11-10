@@ -90,7 +90,7 @@ model Testimonial {
   createdAt DateTime       @default(now())
   updatedAt DateTime       @updatedAt
 
-  @@unique([apiKeyId, idempotencyKey])
+  @@index([apiKeyId, idempotencyKey])
   @@index([status, createdAt])
 }
 
