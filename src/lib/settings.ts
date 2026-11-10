@@ -1,8 +1,9 @@
 import 'server-only';
 import { db } from './db';
+import { publicUrl } from './storage';
 
 export type SiteSettings = {
-  profile: { fullName: string; username: string; email: string; location: string };
+  profile: { fullName: string; username: string; email: string; location: string; avatarKey: string; avatarUrl: string };
   site: { title: string; domain: string };
   notifications: { newMessage: boolean; newFeedback: boolean };
 };
@@ -13,6 +14,8 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     username: 'alfzilham',
     email: 'alfizilham@gmail.com',
     location: 'Aceh Besar, Aceh, Indonesia',
+    avatarKey: '',
+    avatarUrl: '',
   },
   site: { title: 'Alfiz Ilham Portfolio', domain: 'alfizilham.my.id' },
   notifications: { newMessage: true, newFeedback: true },
@@ -30,6 +33,8 @@ export async function getSettings(): Promise<SiteSettings> {
       Object.assign(out[k], row.value);
     }
   }
+  // The URL is derived from the stored key, never saved.
+  out.profile.avatarUrl = out.profile.avatarKey ? publicUrl(out.profile.avatarKey) : '';
   return out;
 }
 
