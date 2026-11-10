@@ -10,7 +10,7 @@ export async function login(_prev: { error: string }, formData: FormData): Promi
   if (!username || !password) return { error: 'Enter your username and password.' };
 
   const ip = await clientIp();
-  if (!rateLimit(`login:${ip}`, 6, 15 * 60 * 1000)) {
+  if (!(await rateLimit(`login:${ip}`, 6, 15 * 60 * 1000))) {
     return { error: 'Too many attempts. Wait 15 minutes and try again.' };
   }
 
