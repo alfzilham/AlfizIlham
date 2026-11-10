@@ -82,7 +82,7 @@ export function Faq() {
 
   return (
     <Section id="faq" label="Frequently asked questions">
-      <div className="grid gap-10 lg:grid-cols-[340px_1fr]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-10 lg:grid-cols-[340px_minmax(0,1fr)]">
         <div className="flex flex-col gap-8">
           <Reveal className="flex flex-col gap-4">
             <h2 className="font-display text-[clamp(64px,9vw,112px)] leading-[0.9] font-medium tracking-[-0.03em]">FAQ</h2>
