@@ -46,7 +46,7 @@ export function Contact() {
     <>
       <section id="contact" aria-label="Contact" className="relative isolate scroll-mt-24 overflow-hidden px-5 py-20 sm:px-8 md:py-28">
         <Glow spots={[['25%', '60%', 520], ['80%', '30%', 480]]} />
-        <span aria-hidden="true" className="pointer-events-none absolute top-[-0.06em] left-1/2 -z-10 -translate-x-1/2 bg-[linear-gradient(180deg,rgba(255,106,26,0.3)_0%,rgba(179,58,0,0.1)_55%,rgba(179,58,0,0)_100%)] bg-clip-text font-sans text-[clamp(96px,24vw,340px)] leading-none font-light whitespace-nowrap text-transparent uppercase select-none">
+        <span aria-hidden="true" className="pointer-events-none absolute top-[-0.06em] left-1/2 -z-10 -translate-x-1/2 bg-[linear-gradient(180deg,rgba(255,106,26,0.3)_0%,rgba(179,58,0,0.1)_55%,rgba(179,58,0,0)_100%)] bg-clip-text font-condensed text-[clamp(96px,24vw,340px)] leading-none whitespace-nowrap text-transparent uppercase select-none">
           CONTACT
         </span>
 
