@@ -71,7 +71,7 @@ export function About() {
                 const Icon = ICONS[a.icon];
                 return (
                   <RevealItem key={a.title} className="flex gap-4 border-b border-line py-5 first:pt-0 last:border-0">
-                    <span className="flex size-11 flex-none items-center justify-center rounded-xl bg-accent/12 text-accent">
+                    <span className="flex size-11 flex-none items-center justify-center rounded-xl btn-grad text-white">
                       <Icon className="size-5" aria-hidden="true" />
                     </span>
                     <div className="flex min-w-0 flex-col gap-1.5">
