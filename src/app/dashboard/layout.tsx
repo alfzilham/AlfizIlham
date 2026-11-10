@@ -15,7 +15,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     db.message.count({ where: { read: false } }),
   ]);
   return (
-    <DashboardShell profile={{ fullName: settings.profile.fullName, username: settings.profile.username }} counts={{ pending, unread }}>
+    <DashboardShell profile={{ fullName: settings.profile.fullName, username: settings.profile.username, avatarUrl: settings.profile.avatarUrl }} counts={{ pending, unread }}>
       {children}
     </DashboardShell>
   );
