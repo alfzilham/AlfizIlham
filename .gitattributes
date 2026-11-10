@@ -1,0 +1,23 @@
+# Normalisasi line ending (aman untuk Windows dan Vercel)
+* text=auto eol=lf
+
+# File teks
+*.ts   text eol=lf
+*.tsx  text eol=lf
+*.js   text eol=lf
+*.mjs  text eol=lf
+*.json text eol=lf
+*.css  text eol=lf
+*.md   text eol=lf
+*.prisma text eol=lf
+*.env.example text eol=lf
+
+# File biner, jangan diubah oleh git
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.webp binary
+*.ico  binary
+*.pdf  binary
+*.woff binary
+*.woff2 binary
