@@ -11,10 +11,20 @@ import { cn } from '@/lib/utils';
 
 export function Nav() {
   const [scrolled, setScrolled] = useState(false);
+  const [hidden, setHidden] = useState(false);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
+    let lastY = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      setScrolled(y > 24);
+      const delta = y - lastY;
+      if (y < 80) setHidden(false);
+      else if (delta > 6) setHidden(true);
+      else if (delta < -6) setHidden(false);
+      if (Math.abs(delta) > 6) lastY = y;
+    };
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
@@ -29,7 +39,12 @@ export function Nav() {
   }, [open]);
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-5">
+    <header
+      className={cn(
+        'ease-out-soft fixed inset-x-0 top-0 z-50 px-3 pt-3 transition-transform duration-300 focus-within:translate-y-0 sm:px-5',
+        hidden && !open ? '-translate-y-full' : 'translate-y-0',
+      )}
+    >
       <div
         className={cn(
           'mx-auto flex h-16 max-w-[1200px] items-center justify-between gap-6 rounded-full px-4 transition-[background,box-shadow] duration-300 sm:px-5',
