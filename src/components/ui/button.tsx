@@ -63,7 +63,7 @@ type LinkButtonProps = React.AnchorHTMLAttributes<HTMLAnchorElement> & {
 
 export function LinkButton({ href, variant = 'glass', size = 'md', icon, external, className, children, ...rest }: LinkButtonProps) {
   const cls = cn(base, variants[variant], sizes[size], className);
-  if (external || href.startsWith('http') || href.startsWith('mailto:') || href.startsWith('tel:') || href.endsWith('.pdf')) {
+  if (external || href.startsWith('#') || href.startsWith('http') || href.startsWith('mailto:') || href.startsWith('tel:') || href.endsWith('.pdf')) {
     return (
       <a href={href} className={cls} {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})} {...rest}>
         {icon}
