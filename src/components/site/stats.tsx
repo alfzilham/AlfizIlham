@@ -3,11 +3,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { animate, useInView, useReducedMotion } from 'framer-motion';
 import { BIG_STATS } from '@/lib/content';
+import { MOTION_ENABLED } from '@/lib/motion';
 
 function Counter({ to }: { to: number }) {
   const ref = useRef<HTMLSpanElement>(null);
   const inView = useInView(ref, { once: true, margin: '0px 0px -15% 0px' });
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotion() || !MOTION_ENABLED;
   const [value, setValue] = useState(reduce ? to : 0);
 
   useEffect(() => {
