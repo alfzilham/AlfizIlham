@@ -1,3 +1,9 @@
+/**
+ * Master switch for the public site. false = static page (no splash, entrances, exits, hero intro,
+ * parallax, counters or marquees). Set to true to bring everything back.
+ */
+export const MOTION_ENABLED = false;
+
 /** Shared motion tokens. Tune the whole site's tempo here. */
 export const EASE = [0.22, 1, 0.36, 1] as const;
 
