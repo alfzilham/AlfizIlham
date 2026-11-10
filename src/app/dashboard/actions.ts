@@ -11,7 +11,7 @@ import { ALLOWED_TYPES, deleteObject, newKey, presignUpload, publicUrl, storageC
 import { fetchPreview } from '@/lib/preview';
 import { generateKey } from '@/lib/api-keys';
 import { emailConfigured, sendReply } from '@/lib/email';
-import { saveSettings, type SiteSettings } from '@/lib/settings';
+import { getSettings, saveSettings, type SiteSettings } from '@/lib/settings';
 
 export type Result<T = object> = ({ ok: true } & T) | { ok: false; message: string; errors?: Record<string, string> };
 
@@ -35,7 +35,7 @@ export async function logout() {
 // ---------- Uploads ----------
 
 const uploadSchema = z.object({
-  kind: z.enum(['projects', 'certificates']),
+  kind: z.enum(['projects', 'certificates', 'avatars']),
   contentType: z.string().refine((t) => ALLOWED_TYPES.includes(t), 'Use a PNG, JPG, WEBP or PDF file'),
   size: z.number().int().positive(),
 });
@@ -45,9 +45,9 @@ export async function createUploadUrl(input: z.input<typeof uploadSchema>): Prom
   const parsed = uploadSchema.safeParse(input);
   if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? 'Invalid file' };
   const { kind, contentType, size } = parsed.data;
-  const limit = kind === 'projects' ? 5 : 10;
+  const limit = kind === 'projects' ? 5 : kind === 'avatars' ? 3 : 10;
   if (size > limit * 1024 * 1024) return { ok: false, message: `The file is larger than ${limit} MB.` };
-  if (kind === 'projects' && contentType === 'application/pdf') return { ok: false, message: 'Use an image for the project preview.' };
+  if (kind !== 'certificates' && contentType === 'application/pdf') return { ok: false, message: kind === 'avatars' ? 'Use an image for the profile photo.' : 'Use an image for the project preview.' };
   if (!storageConfigured()) return { ok: false, message: 'File storage is not configured yet. Add the S3 settings to the environment.' };
   try {
     const key = newKey(kind, contentType);
@@ -308,6 +308,7 @@ const profileSchema = z.object({
   username: z.string().trim().min(2).max(40),
   email: z.string().trim().email(),
   location: z.string().trim().max(120),
+  avatarKey: z.union([z.literal(''), z.string().regex(/^avatars\/[\w./-]+$/).max(200)]).default(''),
 });
 const siteSchema = z.object({ title: z.string().trim().min(2).max(120), domain: z.string().trim().max(120) });
 const notifySchema = z.object({ newMessage: z.boolean(), newFeedback: z.boolean() });
@@ -317,7 +318,16 @@ export async function saveSettingsSection<K extends keyof SiteSettings>(key: K, 
   const schema = key === 'profile' ? profileSchema : key === 'site' ? siteSchema : notifySchema;
   const parsed = schema.safeParse(value);
   if (!parsed.success) return { ok: false, message: 'Please check the highlighted fields.', errors: fieldErrors(parsed.error) };
+  let oldAvatar: string | null = null;
+  if (key === 'profile') {
+    const before = await getSettings();
+    oldAvatar = before.profile.avatarKey || null;
+  }
   await saveSettings(key, parsed.data as SiteSettings[K]);
+  if (key === 'profile') {
+    const next = (parsed.data as { avatarKey?: string }).avatarKey || null;
+    if (oldAvatar && oldAvatar !== next) await deleteObject(oldAvatar);
+  }
   refresh(false);
   return { ok: true };
 }
