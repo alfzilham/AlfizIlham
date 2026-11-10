@@ -162,7 +162,12 @@ export function Contact() {
         </div>
       </section>
 
-      <section id="cta" aria-label="Call to action" className="relative isolate overflow-hidden bg-[radial-gradient(70%_55%_at_50%_100%,rgba(255,106,26,0.14),rgba(255,106,26,0)_70%),#060606]">
+      <section
+        id="cta"
+        aria-label="Call to action"
+        className="relative isolate overflow-hidden"
+        style={{ background: 'radial-gradient(70% 55% at 50% 100%, rgba(255,106,26,0.14), rgba(255,106,26,0) 70%), #060606' }}
+      >
         <svg aria-hidden="true" viewBox="0 0 1600 760" preserveAspectRatio="none" className="pointer-events-none absolute inset-0 -z-10 size-full">
           <defs>
             <linearGradient id="ctaGL" x1="0" y1="1" x2="0.6" y2="0">
