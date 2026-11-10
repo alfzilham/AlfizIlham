@@ -3,7 +3,7 @@
 import { createUploadUrl } from '@/app/dashboard/actions';
 
 /** Uploads a file straight to the bucket with a presigned URL. Returns the stored key and URL. */
-export async function uploadFile(file: File, kind: 'projects' | 'certificates', onProgress?: (pct: number) => void) {
+export async function uploadFile(file: File, kind: 'projects' | 'certificates' | 'avatars', onProgress?: (pct: number) => void) {
   const contentType = file.type === 'image/jpg' ? 'image/jpeg' : file.type;
   const res = await createUploadUrl({ kind, contentType, size: file.size });
   if (!res.ok) throw new Error(res.message);
