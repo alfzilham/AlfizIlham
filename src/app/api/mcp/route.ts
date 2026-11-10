@@ -118,7 +118,7 @@ export async function POST(req: Request) {
           data: { ...fields, idempotencyKey: idemKey ?? null, source: key.project, apiKeyId: key.id, status: 'PENDING' },
         });
       } catch (err) {
-        // Two identical retries can race past the check above; the unique index catches the second one.
+        // Re-check in case a concurrent retry with the same key was just stored.
         const dup = idemKey ? await db.testimonial.findFirst({ where: { apiKeyId: key.id, idempotencyKey: idemKey } }) : null;
         if (!dup) throw err;
         return ok(body.id, {
