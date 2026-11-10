@@ -1,13 +1,16 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
+import { useState, useTransition } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ChevronRight, Download, Key, Link2, MessageSquareQuote, Plus, RotateCcw, Star, Trash2, User } from 'lucide-react';
+import { ChevronRight, Key, Link2, MessageSquareQuote, Plus, RotateCcw, Star, Trash2, User } from 'lucide-react';
 import { Button, LinkButton } from '@/components/ui/button';
 import { Segmented } from '@/components/ui/field';
 import { Card, CardHead, Empty, PageTitle, StatusDot, Thumb } from './ui';
 import { RowMenu } from './row-menu';
+import { ExportLinks } from './export-links';
+import { Pager, SearchBox } from './list-controls';
 import { useFeedback } from './feedback';
 import { deleteTestimonial, setTestimonialStatus } from '@/app/dashboard/actions';
 import { relativeDay } from '@/lib/utils';
@@ -27,18 +30,6 @@ export type TestimonialRow = {
 };
 type Filter = 'all' | Status;
 
-function exportCsv(rows: TestimonialRow[]) {
-  const head = ['name', 'role', 'company', 'message', 'rating', 'project', 'source', 'status', 'created_at'];
-  const esc = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
-  const csv = [head.join(','), ...rows.map((r) => [r.name, r.role, r.company, r.message, r.rating, r.project, r.source, r.status, r.createdAt].map(esc).join(','))].join('\n');
-  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `testimonials-${new Date().toISOString().slice(0, 10)}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
 function Rating({ n }: { n: number }) {
   return (
     <span className="inline-flex items-center gap-1.5 font-mono text-[13px]" aria-label={`${n} out of 5`}>
@@ -53,19 +44,37 @@ export function TestimonialManager({
   connected,
   kpis,
   charts,
-  initialFilter,
+  filter,
+  q,
+  page,
+  pages,
+  filtered,
+  total,
 }: {
   items: TestimonialRow[];
   connected: { id: string; project: string; count: number }[];
   kpis: React.ReactNode;
   charts: React.ReactNode[];
-  initialFilter: Filter;
+  filter: Filter;
+  q: string;
+  page: number;
+  pages: number;
+  filtered: number;
+  total: number;
 }) {
   const { toast, confirm } = useFeedback();
-  const [filter, setFilter] = useState<Filter>(initialFilter);
+  const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [, start] = useTransition();
-  const rows = useMemo(() => items.filter((t) => filter === 'all' || t.status === filter), [items, filter]);
+  const rows = items;
+  const href = (f: Filter, p = 1) => {
+    const sp = new URLSearchParams();
+    if (f !== 'all') sp.set('status', f.toLowerCase());
+    if (q) sp.set('q', q);
+    if (p > 1) sp.set('page', String(p));
+    const text = sp.toString();
+    return `/dashboard/testimonials${text ? `?${text}` : ''}`;
+  };
 
   const setStatus = (t: TestimonialRow, status: Status) =>
     start(async () => {
@@ -115,9 +124,7 @@ export function TestimonialManager({
         subtitle="Feedback arrives from your connected projects. Approve what appears on the site."
         actions={
           <>
-            <Button icon={<Download className="size-4" aria-hidden="true" />} onClick={() => exportCsv(items)} disabled={!items.length}>
-              Export
-            </Button>
+            <ExportLinks kind="testimonials" />
             <LinkButton href="/dashboard/settings?tab=integrations" variant="primary" icon={<Plus className="size-4" aria-hidden="true" />}>
               Connect project
             </LinkButton>
@@ -168,7 +175,7 @@ export function TestimonialManager({
               label="Filter"
               hideLabel
               value={filter}
-              onChange={setFilter}
+              onChange={(f) => router.push(href(f), { scroll: false })}
               options={[
                 { value: 'all', label: 'All' },
                 { value: 'APPROVED', label: 'Approved' },
@@ -178,7 +185,10 @@ export function TestimonialManager({
             />
           }
         />
-        {items.length === 0 ? (
+        <div className="mb-4 max-w-md">
+          <SearchBox action="/dashboard/testimonials" q={q} keep={filter !== 'all' ? { status: filter.toLowerCase() } : undefined} placeholder="Search name, company, message or source" />
+        </div>
+        {total === 0 ? (
           <Empty
             icon={<MessageSquareQuote />}
             title="No feedback yet"
@@ -190,7 +200,7 @@ export function TestimonialManager({
             }
           />
         ) : rows.length === 0 ? (
-          <p className="py-8 text-center text-sm text-muted">Nothing in this filter.</p>
+          <p className="py-8 text-center text-sm text-muted">{q ? 'No testimonial matches your search.' : 'Nothing in this filter.'}</p>
         ) : (
           <>
             <div className="hidden md:block">
@@ -265,6 +275,7 @@ export function TestimonialManager({
             </ul>
           </>
         )}
+        <Pager page={page} pages={pages} total={filtered} hrefFor={(n) => href(filter, n)} />
       </Card>
     </div>
   );
