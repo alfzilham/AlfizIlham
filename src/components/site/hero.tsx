@@ -70,15 +70,15 @@ export function Hero() {
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
-            className="relative z-[5] mx-auto w-[min(86vw,440px)] self-end"
+            className="relative z-[5] w-[min(92vw,540px)] justify-self-center self-end"
           >
             <Image
               src="/hero.webp"
-              alt="Portrait of Alfiz Ilham in a black hoodie with an orange rim light"
-              width={1122}
-              height={1402}
+              alt="Portrait of Alfiz Ilham in a black suit with an orange rim light"
+              width={1024}
+              height={1096}
               priority
-              sizes="(min-width: 1024px) 440px, 86vw"
+              sizes="(min-width: 1024px) 540px, 92vw"
               className="h-auto w-full [mask-image:linear-gradient(to_bottom,#000_72%,transparent_100%)]"
             />
           </motion.div>
