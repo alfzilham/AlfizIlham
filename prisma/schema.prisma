@@ -1,0 +1,127 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum PublishStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum FeedbackStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Project {
+  id          String        @id @default(cuid())
+  title       String
+  description String        @db.Text
+  techStack   String[]
+  liveUrl     String?
+  githubUrl   String?
+  imageUrl    String?
+  imageKey    String?
+  imageSource String?
+  status      PublishStatus @default(DRAFT)
+  views       Int           @default(0)
+  sortOrder   Int           @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([status, sortOrder])
+}
+
+model Category {
+  id           String        @id @default(cuid())
+  name         String        @unique
+  createdAt    DateTime      @default(now())
+  certificates Certificate[]
+}
+
+model Certificate {
+  id         String        @id @default(cuid())
+  title      String
+  issuer     String
+  categoryId String
+  category   Category      @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  fileUrl    String
+  fileKey    String?
+  fileType   String
+  status     PublishStatus @default(DRAFT)
+  views      Int           @default(0)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  @@index([status])
+  @@index([categoryId])
+}
+
+model ApiKey {
+  id           String        @id @default(cuid())
+  project      String
+  prefix       String
+  hash         String        @unique
+  lastUsedAt   DateTime?
+  revokedAt    DateTime?
+  createdAt    DateTime      @default(now())
+  testimonials Testimonial[]
+}
+
+model Testimonial {
+  id        String         @id @default(cuid())
+  name      String
+  role      String?
+  company   String?
+  message   String         @db.Text
+  rating    Int
+  project   String?
+  source    String
+  apiKeyId  String?
+  apiKey    ApiKey?        @relation(fields: [apiKeyId], references: [id], onDelete: SetNull)
+  status    FeedbackStatus @default(PENDING)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@index([status, createdAt])
+}
+
+model Message {
+  id              String    @id @default(cuid())
+  name            String
+  email           String
+  whatsapp        String?
+  service         String
+  customService   String?
+  body            String    @db.Text
+  read            Boolean   @default(false)
+  autoReplySentAt DateTime?
+  createdAt       DateTime  @default(now())
+  replies         Reply[]
+
+  @@index([createdAt])
+}
+
+model Reply {
+  id        String    @id @default(cuid())
+  messageId String
+  message   Message   @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  body      String    @db.Text
+  sentAt    DateTime?
+  error     String?
+  createdAt DateTime  @default(now())
+
+  @@index([messageId])
+}
+
+model Setting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}
