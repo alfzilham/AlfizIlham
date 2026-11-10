@@ -41,7 +41,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${bricolage.variable} ${geist.variable} ${geistMono.variable} ${anton.variable} ${greatVibes.variable}`}>
-      <body className="min-h-dvh bg-bg font-sans text-fg antialiased">
+      <body className="min-h-dvh overflow-x-clip bg-bg font-sans text-fg antialiased">
         <noscript>
           <style>{'#splash{display:none}'}</style>
         </noscript>
