@@ -31,7 +31,7 @@ export function Services() {
     <Section id="services" label="Services">
       <Heading title="What I can build for you" lead="Pick a service to see what it covers and what I have shipped with it." />
 
-      <div className="mt-12 grid gap-8 lg:grid-cols-[340px_1fr]">
+      <div className="mt-12 grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[340px_minmax(0,1fr)]">
         <div role="tablist" aria-label="Services" aria-orientation="vertical" className="flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible">
           {SERVICES.map((svc, i) => {
             const on = i === active;
