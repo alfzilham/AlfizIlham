@@ -105,7 +105,7 @@ export function Thumb({ children, size = 44 }: { children: React.ReactNode; size
 export function Empty({ icon, title, body, action }: { icon: React.ReactNode; title: string; body: string; action?: React.ReactNode }) {
   return (
     <div className="flex flex-col items-center gap-3 px-4 py-12 text-center">
-      <span aria-hidden="true" className="flex size-12 items-center justify-center rounded-2xl bg-accent/12 text-accent [&>svg]:size-6">
+      <span aria-hidden="true" className="flex size-12 items-center justify-center rounded-2xl btn-grad text-white [&>svg]:size-6">
         {icon}
       </span>
       <h3 className="text-base font-semibold">{title}</h3>
