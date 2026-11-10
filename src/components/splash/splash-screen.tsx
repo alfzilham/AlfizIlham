@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import FoldText from './fold-text';
 import GradientASCII from './gradient-ascii';
+import { markSplashDone } from '@/lib/splash-state';
 
 // Project palette, dark to bright (ramp used by the ASCII gradient).
 const COLORS = ['#2a0f06', '#8f2d0a', '#ff6a1a', '#ffb347'];
@@ -58,7 +59,10 @@ export function SplashScreen() {
 
   useEffect(() => {
     if (phase !== 'leaving') return undefined;
-    const done = setTimeout(() => setPhase('gone'), FADE_MS + 60);
+    const done = setTimeout(() => {
+      setPhase('gone');
+      markSplashDone();
+    }, FADE_MS + 60);
     return () => clearTimeout(done);
   }, [phase]);
 
