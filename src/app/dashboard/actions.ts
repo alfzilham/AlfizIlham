@@ -5,7 +5,8 @@ import { redirect } from 'next/navigation';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { db } from '@/lib/db';
-import { currentPasswordHash, endSession, requireAdmin, setPassword } from '@/lib/auth';
+import { currentPasswordHash, endSession, requireAdmin, revokeAllSessions, setPassword, startSession } from '@/lib/auth';
+import { rateLimit } from '@/lib/rate-limit';
 import { certificateSchema, fieldErrors, projectSchema, type CertificateInput, type ProjectInput } from '@/lib/validation';
 import { ALLOWED_TYPES, deleteObject, newKey, presignUpload, publicUrl, storageConfigured } from '@/lib/storage';
 import { fetchPreview } from '@/lib/preview';
@@ -333,10 +334,16 @@ export async function saveSettingsSection<K extends keyof SiteSettings>(key: K, 
 }
 
 export async function changePassword(current: string, next: string): Promise<Result> {
-  await requireAdmin();
+  const session = await requireAdmin();
+  if (!(await rateLimit(`password:${session.sub}`, 5, 15 * 60 * 1000))) {
+    return { ok: false, message: 'Too many attempts. Wait 15 minutes and try again.' };
+  }
   if (next.length < 10) return { ok: false, message: 'Use at least 10 characters.', errors: { next: 'Use at least 10 characters' } };
   const hash = await currentPasswordHash();
   if (!hash || !(await bcrypt.compare(current, hash))) return { ok: false, message: 'The current password is not correct.', errors: { current: 'Not correct' } };
   await setPassword(next);
+  // Sign out every other device, then keep this one signed in with a fresh token.
+  await revokeAllSessions();
+  await startSession(session.sub);
   return { ok: true };
 }
