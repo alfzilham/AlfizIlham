@@ -30,7 +30,7 @@ function Card({ e, compact }: { e: Edu; compact?: boolean }) {
       </span>
       <article className={cn('relative z-10 flex flex-col gap-2.5 rounded-2xl p-[18px]', current ? 'glass-tint' : 'glass')}>
         <div className="flex items-center justify-between gap-2.5">
-          <span className="flex size-9 flex-none items-center justify-center rounded-xl border border-accent/35 bg-accent/12 text-accent">
+          <span className="flex size-9 flex-none items-center justify-center rounded-xl btn-grad text-white">
             <Icon className="size-[18px]" aria-hidden="true" />
           </span>
           <span className={cn('font-mono text-xs', current ? 'text-accent' : 'text-muted')}>{e.year}</span>
