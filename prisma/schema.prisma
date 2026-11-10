@@ -85,10 +85,12 @@ model Testimonial {
   source    String
   apiKeyId  String?
   apiKey    ApiKey?        @relation(fields: [apiKeyId], references: [id], onDelete: SetNull)
+  idempotencyKey String?
   status    FeedbackStatus @default(PENDING)
   createdAt DateTime       @default(now())
   updatedAt DateTime       @updatedAt
 
+  @@unique([apiKeyId, idempotencyKey])
   @@index([status, createdAt])
 }
 
@@ -124,4 +126,11 @@ model Setting {
   key       String   @id
   value     Json
   updatedAt DateTime @updatedAt
+}
+
+/// Fixed-window counters shared by every serverless instance (see lib/rate-limit.ts).
+model RateLimit {
+  key     String   @id
+  count   Int
+  resetAt DateTime
 }
