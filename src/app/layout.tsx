@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Anton, Bricolage_Grotesque, Geist, Geist_Mono, Great_Vibes } from 'next/font/google';
 import { MotionProvider } from '@/components/motion-provider';
 import { SplashScreen } from '@/components/splash/splash-screen';
+import { MOTION_ENABLED } from '@/lib/motion';
 import './globals.css';
 
 const bricolage = Bricolage_Grotesque({ subsets: ['latin'], variable: '--font-bricolage', display: 'swap', weight: ['500', '600', '700', '800'] });
@@ -45,7 +46,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <noscript>
           <style>{'#splash{display:none}'}</style>
         </noscript>
-        <SplashScreen />
+        {MOTION_ENABLED && <SplashScreen />}
         <MotionProvider>{children}</MotionProvider>
       </body>
     </html>
