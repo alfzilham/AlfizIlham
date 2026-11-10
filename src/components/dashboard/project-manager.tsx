@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Briefcase, ExternalLink, EyeOff, Globe, ImageIcon, Link2, Pencil, RotateCcw, Search, Trash2, Upload, X } from 'lucide-react';
+import { Briefcase, Check, ExternalLink, EyeOff, Globe, ImageIcon, Link2, Pencil, RotateCcw, Search, Trash2, Upload } from 'lucide-react';
 import { GithubIcon } from '@/components/brand-icons';
 import { Button } from '@/components/ui/button';
 import { Field, Segmented, TextArea } from '@/components/ui/field';
@@ -13,7 +13,8 @@ import { RowMenu } from './row-menu';
 import { useFeedback } from './feedback';
 import { uploadFile } from './upload';
 import { deleteProject, fetchProjectPreview, saveProject, setProjectStatus } from '@/app/dashboard/actions';
-import { relativeDay } from '@/lib/utils';
+import { cn, relativeDay } from '@/lib/utils';
+import { STACK } from '@/lib/content';
 
 export type ProjectRow = {
   id: string;
@@ -213,7 +214,6 @@ function ProjectModal({ project, open, onClose, onSaved }: { project: ProjectRow
   const [title, setTitle] = useState(project?.title ?? '');
   const [description, setDescription] = useState(project?.description ?? '');
   const [stack, setStack] = useState<string[]>(project?.techStack ?? []);
-  const [chip, setChip] = useState('');
   const [liveUrl, setLiveUrl] = useState(project?.liveUrl ?? '');
   const [githubUrl, setGithubUrl] = useState(project?.githubUrl ?? '');
   const [image, setImage] = useState<{ url: string | null; key: string | null; source: string | null }>({
@@ -229,13 +229,6 @@ function ProjectModal({ project, open, onClose, onSaved }: { project: ProjectRow
   const [saving, startSave] = useTransition();
   const fileRef = useRef<HTMLInputElement>(null);
   const lastFetched = useRef(project?.liveUrl ?? '');
-
-  const addChip = (raw: string) => {
-    const parts = raw.split(',').map((s) => s.trim()).filter(Boolean);
-    if (!parts.length) return;
-    setStack((s) => Array.from(new Set([...s, ...parts])).slice(0, 20));
-    setChip('');
-  };
 
   const runFetch = async (url = liveUrl) => {
     if (!/^https?:\/\/\S+\.\S+/.test(url)) {
@@ -269,12 +262,11 @@ function ProjectModal({ project, open, onClose, onSaved }: { project: ProjectRow
 
   const save = () =>
     startSave(async () => {
-      const pendingChip = chip.trim() ? [...stack, ...chip.split(',').map((s) => s.trim()).filter(Boolean)] : stack;
       const res = await saveProject({
         id: project?.id,
         title,
         description,
-        techStack: pendingChip,
+        techStack: stack,
         liveUrl,
         githubUrl,
         imageUrl: image.url,
@@ -331,39 +323,7 @@ function ProjectModal({ project, open, onClose, onSaved }: { project: ProjectRow
         <Field label="Title" required data-autofocus value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Project title" error={errors.title} />
         <TextArea label="Description" required value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Short description of the project" error={errors.description} />
 
-        <div className="flex flex-col gap-2">
-          <label htmlFor="pj-chip" className="text-[13px] font-medium">
-            Tech stack
-          </label>
-          <div className="input-base flex min-h-12 flex-wrap items-center gap-2 !py-2 focus-within:shadow-[inset_0_0_0_1px_rgba(255,106,26,0.75)]">
-            {stack.map((t) => (
-              <span key={t} className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.08] py-1 pr-1.5 pl-2.5 text-[13px] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.1)]">
-                {t}
-                <button type="button" aria-label={`Remove ${t}`} onClick={() => setStack((s) => s.filter((x) => x !== t))} className="flex size-5 items-center justify-center rounded-full text-muted hover:bg-white/10 hover:text-fg">
-                  <X className="size-3" aria-hidden="true" />
-                </button>
-              </span>
-            ))}
-            <input
-              id="pj-chip"
-              value={chip}
-              onChange={(e) => (e.target.value.endsWith(',') ? addChip(e.target.value) : setChip(e.target.value))}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  addChip(chip);
-                } else if (e.key === 'Backspace' && !chip && stack.length) setStack((s) => s.slice(0, -1));
-              }}
-              onBlur={() => addChip(chip)}
-              placeholder={stack.length ? 'Add more' : 'Add a technology, press Enter'}
-              aria-describedby="pj-chip-hint"
-              className="min-w-[140px] flex-1 bg-transparent text-[15px] placeholder:text-[#7a7a7a] focus:outline-none"
-            />
-          </div>
-          <p id="pj-chip-hint" className="text-xs text-muted">
-            Press Enter or type a comma after each one.
-          </p>
-        </div>
+        <TechPicker value={stack} onChange={setStack} />
 
         <div className="grid gap-5 sm:grid-cols-2">
           <Field
@@ -443,5 +403,58 @@ function ProjectModal({ project, open, onClose, onSaved }: { project: ProjectRow
         </button>
       </form>
     </Modal>
+  );
+}
+
+const MAX_TECH = 20;
+
+/** Checkbox groups for the tech stack. Values already saved on a project but missing from the catalog stay selectable under "Other". */
+function TechPicker({ value, onChange }: { value: string[]; onChange: (next: string[]) => void }) {
+  const known = new Set(STACK.flatMap((g) => g.tools.map((t) => t.label.toLowerCase())));
+  const extras = value.filter((v) => !known.has(v.toLowerCase()));
+  const groups = [...STACK.map((g) => ({ title: g.title, labels: g.tools.map((t) => t.label) })), ...(extras.length ? [{ title: 'Other', labels: extras }] : [])];
+  const full = value.length >= MAX_TECH;
+
+  const toggle = (label: string) =>
+    onChange(value.includes(label) ? value.filter((x) => x !== label) : full ? value : [...value, label]);
+
+  return (
+    <fieldset className="flex flex-col gap-2">
+      <legend className="mb-2 flex w-full items-baseline justify-between text-[13px] font-medium">
+        <span>Tech stack</span>
+        <span className="text-xs font-normal text-muted" aria-live="polite">
+          {value.length} selected
+        </span>
+      </legend>
+      <div className="input-base flex max-h-72 flex-col gap-5 overflow-y-auto !py-4" data-lenis-prevent-wheel>
+        {groups.map((g) => (
+          <div key={g.title} role="group" aria-label={g.title} className="flex flex-col gap-2.5">
+            <p className="font-mono text-[11px] tracking-[0.1em] text-muted uppercase">{g.title}</p>
+            <div className="flex flex-wrap gap-2">
+              {g.labels.map((label) => {
+                const on = value.includes(label);
+                const locked = !on && full;
+                return (
+                  <label key={label} className={cn('relative inline-flex', locked ? 'cursor-not-allowed opacity-45' : 'cursor-pointer')}>
+                    <input type="checkbox" checked={on} disabled={locked} onChange={() => toggle(label)} className="peer sr-only" />
+                    <span
+                      className={cn(
+                        'inline-flex min-h-9 items-center gap-1.5 rounded-full px-3.5 text-[13px] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)] transition-colors duration-200',
+                        'peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent',
+                        on ? 'font-medium text-white [background:var(--btn-grad)]' : 'bg-white/[0.04] text-fg/85 hover:bg-white/[0.09]',
+                      )}
+                    >
+                      {on && <Check className="size-3.5" aria-hidden="true" />}
+                      {label}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+      <p className="text-xs text-muted">Pick up to {MAX_TECH}.{full ? ' Limit reached.' : ''}</p>
+    </fieldset>
   );
 }
