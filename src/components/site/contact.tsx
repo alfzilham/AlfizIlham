@@ -174,7 +174,7 @@ export function Contact() {
 function InfoRow({ icon, label, value, children }: { icon: React.ReactNode; label: string; value: string; children?: React.ReactNode }) {
   return (
     <li className="glass flex items-center gap-4 rounded-2xl p-3 pr-4">
-      <span aria-hidden="true" className="flex size-11 flex-none items-center justify-center rounded-xl bg-accent/15 text-accent">
+      <span aria-hidden="true" className="flex size-11 flex-none items-center justify-center rounded-xl btn-grad text-white">
         {icon}
       </span>
       <span className="flex min-w-0 flex-1 flex-col">
