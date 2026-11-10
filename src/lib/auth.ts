@@ -6,9 +6,29 @@ import { timingSafeEqual } from 'node:crypto';
 import { db } from './db';
 import { SESSION_COOKIE, SESSION_MAX_AGE, signSession, verifySessionToken } from './session';
 
+const EPOCH_KEY = 'sessionsValidAfter';
+
+/** Tokens issued before this moment (ms) are rejected, even if the JWT is still valid. */
+async function sessionsValidAfter() {
+  const row = await db.setting.findUnique({ where: { key: EPOCH_KEY } });
+  return typeof row?.value === 'number' ? row.value : 0;
+}
+
+export async function revokeAllSessions() {
+  const now = Date.now();
+  await db.setting.upsert({ where: { key: EPOCH_KEY }, update: { value: now }, create: { key: EPOCH_KEY, value: now } });
+}
+
 export async function getSession() {
   const store = await cookies();
-  return verifySessionToken(store.get(SESSION_COOKIE)?.value);
+  const session = await verifySessionToken(store.get(SESSION_COOKIE)?.value);
+  if (!session) return null;
+  try {
+    if (session.ts < (await sessionsValidAfter())) return null;
+  } catch {
+    // If the database cannot be read the signed token and its expiry still apply.
+  }
+  return session;
 }
 
 /** Use at the top of every admin page and server action. */
@@ -31,6 +51,8 @@ export async function startSession(username: string) {
 }
 
 export async function endSession() {
+  // Only a signed-in admin may revoke; this keeps logout from being used to sign someone else out.
+  if (await getSession()) await revokeAllSessions();
   const store = await cookies();
   store.delete(SESSION_COOKIE);
 }
