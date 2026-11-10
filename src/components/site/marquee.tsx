@@ -1,3 +1,4 @@
+import { MOTION_ENABLED } from '@/lib/motion';
 import CurvedLoop from '@/components/ui/curved-loop';
 
 const GRADIENT_ID = 'marquee-gradient';
@@ -20,13 +21,14 @@ export function Marquee() {
         marqueeText="Fullstack ✦ Mobile ✦ AI automation ✦ Design ✦ Calligraphy ✦"
         shape="arc"
         curveAmount={220}
-        speed={1.5}
+        speed={MOTION_ENABLED ? 1.5 : 0}
+        scrollBoost={MOTION_ENABLED ? undefined : 0}
         direction="left"
         fontSize={96}
         fontWeight={700}
         letterSpacing={-1.92}
         color={`url(#${GRADIENT_ID})`}
-        interactive
+        interactive={MOTION_ENABLED}
       />
     </section>
   );
