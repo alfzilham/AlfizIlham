@@ -1,13 +1,14 @@
 'use client';
 
 import { motion, type Variants } from 'framer-motion';
+import { DIST, DUR_IN, DUR_OUT, EASE, STAGGER, VIEWPORT } from '@/lib/motion';
 
 const item: Variants = {
-  hidden: { opacity: 0, y: 24 },
-  show: (delay: number = 0) => ({ opacity: 1, y: 0, transition: { duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] } }),
+  hidden: { opacity: 0, y: DIST, transition: { duration: DUR_OUT, ease: EASE } },
+  show: (delay: number = 0) => ({ opacity: 1, y: 0, transition: { duration: DUR_IN, delay, ease: EASE } }),
 };
 
-/** Fades and lifts its children into view once. Respects reduced motion through MotionConfig. */
+/** Fades and lifts its children in when they scroll into view, and eases them out when they leave. */
 export function Reveal({
   children,
   className,
@@ -18,28 +19,24 @@ export function Reveal({
   delay?: number;
 }) {
   return (
-    <motion.div
-      className={className}
-      initial="hidden"
-      whileInView="show"
-      viewport={{ once: true, margin: '0px 0px -10% 0px' }}
-      variants={item}
-      custom={delay}
-    >
+    <motion.div className={className} initial="hidden" whileInView="show" viewport={VIEWPORT} variants={item} custom={delay}>
       {children}
     </motion.div>
   );
 }
 
 /** Staggers direct RevealItem children. */
-export function RevealGroup({ children, className, stagger = 0.07 }: { children: React.ReactNode; className?: string; stagger?: number }) {
+export function RevealGroup({ children, className, stagger = STAGGER }: { children: React.ReactNode; className?: string; stagger?: number }) {
   return (
     <motion.div
       className={className}
       initial="hidden"
       whileInView="show"
-      viewport={{ once: true, margin: '0px 0px -10% 0px' }}
-      variants={{ hidden: {}, show: { transition: { staggerChildren: stagger } } }}
+      viewport={VIEWPORT}
+      variants={{
+        hidden: { transition: { staggerChildren: 0.04, staggerDirection: -1 } },
+        show: { transition: { staggerChildren: stagger } },
+      }}
     >
       {children}
     </motion.div>
