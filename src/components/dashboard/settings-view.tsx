@@ -1,13 +1,15 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useTransition } from 'react';
-import { Bell, Check, Copy, Database, Globe, Key, KeyRound, Link2, Lock, Mail, MapPin, Plus, Trash2, User } from 'lucide-react';
+import Image from 'next/image';
+import { useRef, useState, useTransition } from 'react';
+import { Bell, Check, Copy, Database, Globe, Key, KeyRound, Link2, Lock, Mail, MapPin, Plus, Trash2, Upload, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import { Modal } from '@/components/ui/modal';
 import { Card, CardHead, Empty, Thumb } from './ui';
 import { useFeedback } from './feedback';
+import { uploadFile } from './upload';
 import { changePassword, createApiKey, revokeApiKey, saveSettingsSection } from '@/app/dashboard/actions';
 import { cn, initials, relativeDay } from '@/lib/utils';
 import type { SiteSettings } from '@/lib/settings';
@@ -81,7 +83,34 @@ function useSave<K extends keyof SiteSettings>(key: K) {
 function ProfileForm({ initial }: { initial: SiteSettings['profile'] }) {
   const [v, setV] = useState(initial);
   const { pending, errors, save } = useSave('profile');
-  const set = (k: keyof typeof v) => (e: React.ChangeEvent<HTMLInputElement>) => setV((s) => ({ ...s, [k]: e.target.value }));
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [preview, setPreview] = useState(initial.avatarUrl);
+  const [uploading, setUploading] = useState<number | null>(null);
+  const [photoError, setPhotoError] = useState('');
+
+  const onPick = async (picked: File | undefined) => {
+    if (!picked) return;
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(picked.type)) return setPhotoError('Choose a PNG, JPG or WEBP image.');
+    setPhotoError('');
+    try {
+      setUploading(0);
+      const file = await squareCrop(picked);
+      const res = await uploadFile(file, 'avatars', setUploading);
+      setV((s) => ({ ...s, avatarKey: res.key }));
+      setPreview(res.url);
+    } catch (err) {
+      setPhotoError(err instanceof Error ? err.message : 'Upload failed.');
+    } finally {
+      setUploading(null);
+      if (fileRef.current) fileRef.current.value = '';
+    }
+  };
+  const removePhoto = () => {
+    setV((s) => ({ ...s, avatarKey: '' }));
+    setPreview('');
+    setPhotoError('');
+  };
+  const set = (k: 'fullName' | 'username' | 'email' | 'location') => (e: React.ChangeEvent<HTMLInputElement>) => setV((s) => ({ ...s, [k]: e.target.value }));
   return (
     <Card>
       <CardHead title="Profile" subtitle="Shown on the dashboard and in notifications" />
@@ -92,11 +121,30 @@ function ProfileForm({ initial }: { initial: SiteSettings['profile'] }) {
         }}
         className="flex flex-col gap-5"
       >
-        <div className="flex items-center gap-4">
-          <span aria-hidden="true" className="btn-grad flex size-16 items-center justify-center rounded-full font-display text-xl font-bold text-white">
-            {initials(v.fullName)}
-          </span>
-          <p className="text-sm text-muted">Your initials are used as the avatar.</p>
+        <div className="flex flex-wrap items-center gap-4">
+          {preview ? (
+            <Image src={preview} alt="Profile photo" width={128} height={128} unoptimized className="size-16 rounded-full object-cover" />
+          ) : (
+            <span aria-hidden="true" className="btn-grad flex size-16 items-center justify-center rounded-full font-display text-xl font-bold text-white">
+              {initials(v.fullName)}
+            </span>
+          )}
+          <div className="flex flex-col gap-2">
+            <div className="flex flex-wrap gap-2">
+              <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" tabIndex={-1} aria-label="Choose a profile photo" onChange={(e) => onPick(e.target.files?.[0])} />
+              <Button size="sm" loading={uploading !== null} icon={<Upload className="size-4" aria-hidden="true" />} onClick={() => fileRef.current?.click()}>
+                {uploading !== null ? `Uploading ${uploading}%` : preview ? 'Change photo' : 'Upload photo'}
+              </Button>
+              {preview && uploading === null && (
+                <Button size="sm" variant="ghost" icon={<Trash2 className="size-4" aria-hidden="true" />} onClick={removePhoto}>
+                  Remove
+                </Button>
+              )}
+            </div>
+            <p className={cn('text-sm', photoError ? 'text-bad' : 'text-muted')} role={photoError ? 'alert' : undefined}>
+              {photoError || 'PNG, JPG or WEBP. Cropped to a square. Click Save changes to apply.'}
+            </p>
+          </div>
         </div>
         <div className="grid gap-5 sm:grid-cols-2">
           <Field label="Full name" value={v.fullName} onChange={set('fullName')} error={errors.fullName} autoComplete="name" />
@@ -104,10 +152,35 @@ function ProfileForm({ initial }: { initial: SiteSettings['profile'] }) {
           <Field label="Email" type="email" icon={<Mail />} value={v.email} onChange={set('email')} error={errors.email} autoComplete="email" />
           <Field label="Location" icon={<MapPin />} value={v.location} onChange={set('location')} error={errors.location} />
         </div>
-        <SaveRow pending={pending} onReset={() => setV(initial)} />
+        <SaveRow pending={pending} onReset={() => {
+            setV(initial);
+            setPreview(initial.avatarUrl);
+            setPhotoError('');
+          }}
+        />
       </form>
     </Card>
   );
+}
+
+/** Center-crops to a square and scales down to 512px (WEBP), so avatars stay small and consistent. */
+async function squareCrop(file: File): Promise<File> {
+  try {
+    const bmp = await createImageBitmap(file);
+    const side = Math.min(bmp.width, bmp.height);
+    const size = Math.min(512, side);
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return file;
+    ctx.drawImage(bmp, (bmp.width - side) / 2, (bmp.height - side) / 2, side, side, 0, 0, size, size);
+    bmp.close();
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/webp', 0.9));
+    return blob ? new File([blob], 'avatar.webp', { type: 'image/webp' }) : file;
+  } catch {
+    return file;
+  }
 }
 
 function SiteForm({ initial }: { initial: SiteSettings['site'] }) {
