@@ -6,6 +6,7 @@ import { Stats } from '@/components/site/stats';
 import { Education } from '@/components/site/education';
 import { Stack } from '@/components/site/stack';
 import { Projects, type PublicProject } from '@/components/site/projects';
+import { Marquee } from '@/components/site/marquee';
 import { Services } from '@/components/site/services';
 import { Certificates, type PublicCertificate } from '@/components/site/certificates';
 import { Testimonials, type PublicTestimonial } from '@/components/site/testimonials';
@@ -59,6 +60,7 @@ export default async function HomePage() {
         <Education />
         <Stack />
         <Projects projects={projects} />
+        <Marquee />
         <Services />
         {certificates.length > 0 && <Certificates certificates={certificates} />}
         {testimonials.length > 0 && <Testimonials testimonials={testimonials} />}
