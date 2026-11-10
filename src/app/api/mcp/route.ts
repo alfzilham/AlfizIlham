@@ -29,6 +29,11 @@ const TOOL = {
       message: { type: 'string', description: 'The feedback in the client words', minLength: 5, maxLength: 1500 },
       rating: { type: 'integer', minimum: 1, maximum: 5, description: 'Rating from 1 to 5' },
       project: { type: 'string', description: 'Name of the project the feedback is about', maxLength: 120 },
+      idempotency_key: {
+        type: 'string',
+        description: 'Optional unique key for this feedback (for example the feedback id in your own database). Retrying with the same key will not create a duplicate.',
+        maxLength: 80,
+      },
     },
     required: ['name', 'message', 'rating'],
     additionalProperties: false,
@@ -55,7 +60,7 @@ export async function POST(req: Request) {
       { status: 401, headers: { 'www-authenticate': 'Bearer' } },
     );
   }
-  if (!rateLimit(`mcp:${key.id}`, 60, 60_000)) return fail(null, -32002, 'Too many requests, slow down.', 429);
+  if (!(await rateLimit(`mcp:${key.id}`, 60, 60_000))) return fail(null, -32002, 'Too many requests, slow down.', 429);
 
   let body: RpcRequest;
   try {
@@ -97,9 +102,30 @@ export async function POST(req: Request) {
           content: [{ type: 'text', text: `Invalid feedback: ${parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ')}` }],
         });
       }
-      const t = await db.testimonial.create({
-        data: { ...parsed.data, source: key.project, apiKeyId: key.id, status: 'PENDING' },
-      });
+      const { idempotency_key: idemKey, ...fields } = parsed.data;
+      if (idemKey) {
+        const existing = await db.testimonial.findFirst({ where: { apiKeyId: key.id, idempotencyKey: idemKey } });
+        if (existing) {
+          return ok(body.id, {
+            content: [{ type: 'text', text: `Feedback ${existing.id} was already received (duplicate ignored).` }],
+            structuredContent: { id: existing.id, status: existing.status.toLowerCase(), duplicate: true },
+          });
+        }
+      }
+      let t;
+      try {
+        t = await db.testimonial.create({
+          data: { ...fields, idempotencyKey: idemKey ?? null, source: key.project, apiKeyId: key.id, status: 'PENDING' },
+        });
+      } catch (err) {
+        // Two identical retries can race past the check above; the unique index catches the second one.
+        const dup = idemKey ? await db.testimonial.findFirst({ where: { apiKeyId: key.id, idempotencyKey: idemKey } }) : null;
+        if (!dup) throw err;
+        return ok(body.id, {
+          content: [{ type: 'text', text: `Feedback ${dup.id} was already received (duplicate ignored).` }],
+          structuredContent: { id: dup.id, status: dup.status.toLowerCase(), duplicate: true },
+        });
+      }
       revalidatePath('/dashboard', 'layout');
       const settings = await getSettings().catch(() => null);
       if (settings?.notifications.newFeedback) {
