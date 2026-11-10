@@ -1,4 +1,5 @@
 import { Activity, Mail, MailOpen, Reply } from 'lucide-react';
+import type { Prisma } from '@prisma/client';
 import { db } from '@/lib/db';
 import { emailConfigured } from '@/lib/email';
 import { Kpi } from '@/components/dashboard/ui';
@@ -12,11 +13,31 @@ function hours(ms: number) {
   return h ? `${h}h ${m}m` : `${m}m`;
 }
 
-export default async function MessagesPage({ searchParams }: { searchParams: Promise<{ id?: string; filter?: string }> }) {
-  const { id, filter } = await searchParams;
+const PAGE_SIZE = 25;
+
+export default async function MessagesPage({ searchParams }: { searchParams: Promise<{ id?: string; filter?: string; q?: string; page?: string }> }) {
+  const { id, filter, q: rawQ, page: rawPage } = await searchParams;
   const unreadOnly = filter === 'unread';
+  const q = (rawQ ?? '').trim().slice(0, 80);
+  const where: Prisma.MessageWhereInput = {
+    ...(unreadOnly ? { read: false } : {}),
+    ...(q
+      ? {
+          OR: [
+            { name: { contains: q, mode: 'insensitive' } },
+            { email: { contains: q, mode: 'insensitive' } },
+            { body: { contains: q, mode: 'insensitive' } },
+            { service: { contains: q, mode: 'insensitive' } },
+            { customService: { contains: q, mode: 'insensitive' } },
+          ],
+        }
+      : {}),
+  };
+  const filtered = await db.message.count({ where });
+  const pages = Math.max(1, Math.ceil(filtered / PAGE_SIZE));
+  const page = Math.min(pages, Math.max(1, Number.parseInt(rawPage ?? '1', 10) || 1));
   const [list, total, unread, replied, firstReplies] = await Promise.all([
-    db.message.findMany({ where: unreadOnly ? { read: false } : {}, orderBy: { createdAt: 'desc' }, take: 100 }),
+    db.message.findMany({ where, orderBy: { createdAt: 'desc' }, skip: (page - 1) * PAGE_SIZE, take: PAGE_SIZE }),
     db.message.count(),
     db.message.count({ where: { read: false } }),
     db.message.count({ where: { replies: { some: { sentAt: { not: null } } } } }),
@@ -44,6 +65,10 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
     <MessagesView
       unreadOnly={unreadOnly}
       explicit={Boolean(id)}
+      q={q}
+      page={page}
+      pages={pages}
+      total={filtered}
       emailReady={emailConfigured()}
       list={list.map((m) => ({ id: m.id, name: m.name, service: m.service === 'Other' && m.customService ? m.customService : m.service, preview: m.body.slice(0, 120), read: id && m.id === selected?.id ? true : m.read, createdAt: m.createdAt.toISOString() }))}
       selected={
