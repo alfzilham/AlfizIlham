@@ -37,7 +37,7 @@ const ALL = [...NAV, { href: '/dashboard/settings', label: 'Settings', icon: Set
 
 type Props = {
   children: React.ReactNode;
-  profile: { fullName: string; username: string };
+  profile: { fullName: string; username: string; avatarUrl: string };
   counts: { pending: number; unread: number };
 };
 
@@ -52,11 +52,15 @@ export function DashboardShell({ children, profile, counts }: Props) {
   return (
     <FeedbackProvider>
     <div className="relative min-h-dvh">
-      <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-        <span className="absolute top-[24%] left-[14%] h-[380px] w-[520px] rounded-full bg-[radial-gradient(closest-side,rgba(255,106,26,0.18),transparent)] blur-2xl" />
-        <span className="absolute top-[64%] left-[58%] h-[400px] w-[560px] rounded-full bg-[radial-gradient(closest-side,rgba(255,106,26,0.14),transparent)] blur-2xl" />
-        <span className="absolute top-[20%] left-[92%] h-[360px] w-[480px] rounded-full bg-[radial-gradient(closest-side,rgba(255,106,26,0.16),transparent)] blur-2xl" />
-      </div>
+      {/* Soft orange glow, same family as the landing footer, so the glass surfaces have something to refract. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 -z-10"
+        style={{
+          background:
+            'radial-gradient(85% 75% at 100% 100%, rgba(255,160,100,0.34) 0%, rgba(226,83,26,0.28) 26%, rgba(120,40,10,0.2) 52%, rgba(10,10,10,0) 80%), radial-gradient(60% 60% at 0% 100%, rgba(143,45,10,0.3), rgba(10,10,10,0) 72%), radial-gradient(55% 40% at 50% 0%, rgba(255,106,26,0.09), rgba(10,10,10,0) 70%), #0a0a0a',
+        }}
+      />
 
       {/* Desktop rail */}
       <aside className="glass fixed top-5 bottom-5 left-5 z-40 hidden w-[76px] flex-col items-center rounded-[28px] py-5 lg:flex">
@@ -353,9 +357,13 @@ function ProfileMenu({ profile }: { profile: Props['profile'] }) {
           aria-label="Account menu"
           className="glass-soft flex h-11 items-center gap-2.5 rounded-full pr-3 pl-1 sm:h-12 sm:pr-4"
         >
-          <span aria-hidden="true" className="btn-grad flex size-9 items-center justify-center rounded-full font-display text-sm font-bold text-white sm:size-10">
-            {initials(profile.fullName) || 'AI'}
-          </span>
+          {profile.avatarUrl ? (
+            <Image src={profile.avatarUrl} alt="" width={80} height={80} unoptimized className="size-9 rounded-full object-cover sm:size-10" />
+          ) : (
+            <span aria-hidden="true" className="btn-grad flex size-9 items-center justify-center rounded-full font-display text-sm font-bold text-white sm:size-10">
+              {initials(profile.fullName) || 'AI'}
+            </span>
+          )}
           <span className="hidden text-left leading-tight sm:block">
             <span className="block text-sm font-medium">{profile.fullName}</span>
             <span className="block text-xs text-muted">@{profile.username}</span>
