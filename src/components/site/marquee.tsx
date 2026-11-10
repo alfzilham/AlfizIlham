@@ -17,7 +17,7 @@ export function Marquee() {
         </defs>
       </svg>
       <CurvedLoop
-        marqueeText="Fullstack / Mobile / AI automation / Design / Calligraphy /"
+        marqueeText="Fullstack ✦ Mobile ✦ AI automation ✦ Design ✦ Calligraphy ✦"
         shape="arc"
         curveAmount={220}
         speed={1.5}
