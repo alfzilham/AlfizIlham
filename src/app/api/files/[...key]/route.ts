@@ -7,7 +7,7 @@ export const runtime = 'nodejs';
 export async function GET(_req: Request, { params }: { params: Promise<{ key: string[] }> }) {
   const { key } = await params;
   const path = key.join('/');
-  if (!storageConfigured() || !/^(projects|certificates)\/[\w./-]+$/.test(path) || path.includes('..')) {
+  if (!storageConfigured() || !/^(projects|certificates|avatars)\/[\w./-]+$/.test(path) || path.includes('..')) {
     return new NextResponse('Not found', { status: 404 });
   }
   try {
