@@ -5,7 +5,7 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { useRef } from 'react';
 import { Globe, Sparkles } from 'lucide-react';
 import { HERO_STATS } from '@/lib/content';
-import { DIST, DUR_IN, EASE } from '@/lib/motion';
+import { DIST, DUR_IN, EASE, MOTION_ENABLED } from '@/lib/motion';
 import { useSplashDone } from '@/lib/splash-state';
 
 /** Hero entrance starts only once the splash has finished and faded away. */
@@ -14,8 +14,9 @@ const STEP = 0.14;
 
 
 export function Hero() {
-  const ready = useSplashDone();
-  const rise = (step: number) => ({
+  const splashDone = useSplashDone();
+  const ready = splashDone || !MOTION_ENABLED;
+  const rise = (step: number) => (!MOTION_ENABLED ? { initial: false as const } : {
     initial: { opacity: 0, y: DIST },
     animate: ready ? { opacity: 1, y: 0 } : { opacity: 0, y: DIST },
     transition: { duration: DUR_IN, delay: START + step * STEP, ease: EASE },
@@ -44,10 +45,10 @@ export function Hero() {
           {/* Big outlined word behind the portrait */}
           <motion.span
             aria-hidden="true"
-            style={{ x: wordX }}
-            initial={{ opacity: 0 }}
+            style={MOTION_ENABLED ? { x: wordX } : undefined}
+            initial={MOTION_ENABLED ? { opacity: 0 } : false}
             animate={{ opacity: ready ? 0.9 : 0 }}
-            transition={{ duration: 1.6, delay: START, ease: EASE }}
+            transition={{ duration: MOTION_ENABLED ? 1.6 : 0, delay: START, ease: EASE }}
             className="pointer-events-none absolute top-[8%] left-1/2 -z-10 -translate-x-1/2 bg-[linear-gradient(180deg,#ff7a1f_0%,#d4491a_55%,rgba(107,35,11,0.15)_100%)] bg-clip-text font-condensed text-[clamp(120px,24vw,360px)] leading-none whitespace-nowrap text-transparent select-none"
           >
             PORTFOLIO
@@ -76,10 +77,10 @@ export function Hero() {
           </div>
 
           <motion.div
-            style={{ y: photoY }}
-            initial={{ opacity: 0, scale: 0.96 }}
+            style={MOTION_ENABLED ? { y: photoY } : undefined}
+            initial={MOTION_ENABLED ? { opacity: 0, scale: 0.96 } : false}
             animate={ready ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.96 }}
-            transition={{ duration: 1.5, delay: START + STEP, ease: EASE }}
+            transition={{ duration: MOTION_ENABLED ? 1.5 : 0, delay: START + STEP, ease: EASE }}
             className="relative z-[5] w-[min(92vw,540px)] justify-self-center self-end"
           >
             <Image
