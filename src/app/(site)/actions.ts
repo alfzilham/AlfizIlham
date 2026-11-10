@@ -22,7 +22,7 @@ export async function submitContact(input: unknown): Promise<ContactState> {
   }
 
   const ip = await clientIp();
-  if (!rateLimit(`contact:${ip}`, 4, 10 * 60 * 1000)) {
+  if (!(await rateLimit(`contact:${ip}`, 4, 10 * 60 * 1000))) {
     return { status: 'error', message: 'Too many messages in a short time. Please try again in a few minutes, or email me directly.' };
   }
 
@@ -62,7 +62,7 @@ export async function submitContact(input: unknown): Promise<ContactState> {
 export async function trackView(kind: 'project' | 'certificate', id: string) {
   if (typeof id !== 'string' || id.length > 40) return;
   const ip = await clientIp();
-  if (!rateLimit(`view:${kind}:${id}:${ip}`, 1, 60 * 60 * 1000)) return;
+  if (!(await rateLimit(`view:${kind}:${id}:${ip}`, 1, 60 * 60 * 1000))) return;
   try {
     if (kind === 'project') await db.project.update({ where: { id, status: 'PUBLISHED' }, data: { views: { increment: 1 } } });
     else await db.certificate.update({ where: { id, status: 'PUBLISHED' }, data: { views: { increment: 1 } } });
