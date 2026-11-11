@@ -8,14 +8,14 @@ export const metadata: Metadata = { title: { default: 'Dashboard', template: '%s
 export const dynamic = 'force-dynamic';
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  await requireAdmin();
+  const session = await requireAdmin();
   const [settings, pending, unread] = await Promise.all([
     getSettings(),
     db.testimonial.count({ where: { status: 'PENDING' } }),
     db.message.count({ where: { read: false } }),
   ]);
   return (
-    <DashboardShell profile={{ fullName: settings.profile.fullName, username: settings.profile.username, avatarUrl: settings.profile.avatarUrl }} counts={{ pending, unread }}>
+    <DashboardShell session={{ expiresAt: session.exp * 1000, serverNow: Date.now() }} profile={{ fullName: settings.profile.fullName, username: settings.profile.username, avatarUrl: settings.profile.avatarUrl }} counts={{ pending, unread }}>
       {children}
     </DashboardShell>
   );
