@@ -71,6 +71,7 @@ export default async function TestimonialsPage({ searchParams }: { searchParams:
         project: t.project,
         source: t.source,
         status: t.status,
+        avatarUrl: t.avatarUrl,
         createdAt: t.createdAt.toISOString(),
       }))}
       connected={keys.map((k) => ({ id: k.id, project: k.project, count: k._count.testimonials }))}
