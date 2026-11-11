@@ -57,6 +57,8 @@ model Certificate {
   fileUrl    String
   fileKey    String?
   fileType   String
+  credentialId String?
+  pinnedAt   DateTime?
   status     PublishStatus @default(DRAFT)
   views      Int           @default(0)
   createdAt  DateTime      @default(now())

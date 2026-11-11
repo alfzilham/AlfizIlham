@@ -33,6 +33,7 @@ export const certificateSchema = z.object({
   fileUrl: z.string().min(1, 'Upload the certificate file').max(1000),
   fileKey: z.string().max(300).optional().nullable(),
   fileType: z.enum(['pdf', 'image']),
+  credentialId: z.string().trim().max(120).optional().nullable(),
   status: z.enum(['DRAFT', 'PUBLISHED']),
 });
 export type CertificateInput = z.input<typeof certificateSchema>;

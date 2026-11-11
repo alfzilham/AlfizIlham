@@ -27,8 +27,8 @@ async function loadContent() {
       }),
       db.certificate.findMany({
         where: { status: 'PUBLISHED' },
-        orderBy: { createdAt: 'desc' },
-        select: { id: true, title: true, issuer: true, fileUrl: true, fileType: true, category: { select: { name: true } } },
+        orderBy: [{ pinnedAt: { sort: 'desc', nulls: 'last' } }, { createdAt: 'desc' }],
+        select: { id: true, title: true, issuer: true, fileUrl: true, fileType: true, credentialId: true, category: { select: { name: true } } },
       }),
       db.testimonial.findMany({
         where: { status: 'APPROVED' },
