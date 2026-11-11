@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import { currentPasswordHash, endSession, requireAdmin, revokeAllSessions, setPassword, startSession } from '@/lib/auth';
 import { rateLimit } from '@/lib/rate-limit';
+import { SESSION_MAX_AGE } from '@/lib/session';
 import { certificateSchema, fieldErrors, projectSchema, type CertificateInput, type ProjectInput } from '@/lib/validation';
 import { ALLOWED_TYPES, deleteObject, newKey, presignUpload, publicUrl, storageConfigured } from '@/lib/storage';
 import { fetchPreview } from '@/lib/preview';
@@ -31,6 +32,13 @@ function failure(err: unknown, fallback: string): { ok: false; message: string }
 export async function logout() {
   await endSession();
   redirect('/login');
+}
+
+/** Issues a fresh session token. The expiry returned is the server clock, in milliseconds. */
+export async function extendSession(): Promise<Result<{ expiresAt: number }>> {
+  const session = await requireAdmin();
+  await startSession(session.sub);
+  return { ok: true, expiresAt: Date.now() + SESSION_MAX_AGE * 1000 };
 }
 
 // ---------- Uploads ----------
