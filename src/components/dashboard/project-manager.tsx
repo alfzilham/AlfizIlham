@@ -12,7 +12,7 @@ import { Card, CardHead, Empty, PageTitle, StatusDot, Thumb } from './ui';
 import { RowMenu } from './row-menu';
 import { useFeedback } from './feedback';
 import { uploadFile } from './upload';
-import { deleteProject, fetchProjectPreview, saveProject, setProjectStatus } from '@/app/dashboard/actions';
+import { deleteProject, fetchProjectIcon, fetchProjectPreview, saveProject, setProjectStatus } from '@/app/dashboard/actions';
 import { cn, relativeDay } from '@/lib/utils';
 import { STACK } from '@/lib/content';
 
@@ -26,6 +26,9 @@ export type ProjectRow = {
   imageUrl: string | null;
   imageKey: string | null;
   imageSource: string | null;
+  iconUrl: string | null;
+  iconKey: string | null;
+  iconSource: string | null;
   status: 'DRAFT' | 'PUBLISHED';
   views: number;
   updatedAt: string;
@@ -221,14 +224,23 @@ function ProjectModal({ project, open, onClose, onSaved }: { project: ProjectRow
     key: project?.imageKey ?? null,
     source: project?.imageSource ?? null,
   });
+  const [icon, setIcon] = useState<{ url: string | null; key: string | null; source: string | null }>({
+    url: project?.iconUrl ?? null,
+    key: project?.iconKey ?? null,
+    source: project?.iconSource ?? null,
+  });
   const [status, setStatus] = useState<'DRAFT' | 'PUBLISHED'>(project?.status ?? 'PUBLISHED');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [message, setMessage] = useState('');
   const [fetching, setFetching] = useState(false);
   const [uploading, setUploading] = useState<number | null>(null);
+  const [fetchingIcon, setFetchingIcon] = useState(false);
+  const [uploadingIcon, setUploadingIcon] = useState<number | null>(null);
   const [saving, startSave] = useTransition();
   const fileRef = useRef<HTMLInputElement>(null);
+  const iconFileRef = useRef<HTMLInputElement>(null);
   const lastFetched = useRef(project?.liveUrl ?? '');
+  const lastIconFetched = useRef(project?.liveUrl ?? '');
 
   const runFetch = async (url = liveUrl) => {
     if (!/^https?:\/\/\S+\.\S+/.test(url)) {
@@ -242,6 +254,36 @@ function ProjectModal({ project, open, onClose, onSaved }: { project: ProjectRow
     setFetching(false);
     if (res.ok) setImage({ url: res.url, key: res.key, source: res.source });
     else setMessage(res.message);
+  };
+
+  const runIconFetch = async (url = liveUrl) => {
+    if (!/^https?:\/\/\S+\.\S+/.test(url)) {
+      setErrors((e) => ({ ...e, liveUrl: 'Enter a full link first, for example https://example.com' }));
+      return;
+    }
+    setFetchingIcon(true);
+    setMessage('');
+    lastIconFetched.current = url;
+    const res = await fetchProjectIcon(url);
+    setFetchingIcon(false);
+    if (res.ok) setIcon({ url: res.url, key: res.key, source: res.source });
+    else setMessage(res.message);
+  };
+
+  const onIconFile = async (file: File | undefined) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) return setMessage('Choose a PNG, JPG or WEBP image.');
+    setMessage('');
+    try {
+      setUploadingIcon(0);
+      const res = await uploadFile(file, 'projects', setUploadingIcon);
+      setIcon({ url: res.url, key: res.key, source: 'upload' });
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Upload failed.');
+    } finally {
+      setUploadingIcon(null);
+      if (iconFileRef.current) iconFileRef.current.value = '';
+    }
   };
 
   const onFile = async (file: File | undefined) => {
@@ -272,6 +314,9 @@ function ProjectModal({ project, open, onClose, onSaved }: { project: ProjectRow
         imageUrl: image.url,
         imageKey: image.key,
         imageSource: image.source as 'og' | 'screenshot' | 'upload' | null,
+        iconUrl: icon.url,
+        iconKey: icon.key,
+        iconSource: icon.source as 'site' | 'service' | 'upload' | null,
         status,
       });
       if (res.ok) onSaved(project ? 'Project updated' : status === 'PUBLISHED' ? 'Project published' : 'Project saved as draft');
@@ -335,6 +380,7 @@ function ProjectModal({ project, open, onClose, onSaved }: { project: ProjectRow
             onChange={(e) => setLiveUrl(e.target.value)}
             onBlur={() => {
               if (liveUrl && liveUrl !== lastFetched.current && !image.url && /^https?:\/\/\S+\.\S+/.test(liveUrl)) void runFetch(liveUrl);
+              if (liveUrl && liveUrl !== lastIconFetched.current && !icon.url && /^https?:\/\/\S+\.\S+/.test(liveUrl)) void runIconFetch(liveUrl);
             }}
             placeholder="https://"
             hint="Optional. Any URL works."
@@ -391,6 +437,38 @@ function ProjectModal({ project, open, onClose, onSaved }: { project: ProjectRow
             <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" tabIndex={-1} aria-hidden="true" onChange={(e) => onFile(e.target.files?.[0])} />
           </div>
           <p className="text-xs text-muted">If the URL has no preview or the fetch fails, upload an image manually. PNG, JPG or WEBP up to 5 MB.</p>
+        </div>
+
+        <div className="flex flex-col gap-2.5">
+          <span className="text-[13px] font-medium">Project icon</span>
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white/[0.06] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)]">
+              {icon.url ? <img src={icon.url} alt="Project icon" className="size-full object-contain p-1.5" /> : <ImageIcon className="size-6 text-muted" aria-hidden="true" />}
+              {(fetchingIcon || uploadingIcon !== null) && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/60 text-[11px]" role="status">
+                  {fetchingIcon ? 'Fetching' : `${uploadingIcon}%`}
+                </div>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-2.5">
+              <Button size="sm" icon={<RotateCcw className="size-4" aria-hidden="true" />} onClick={() => runIconFetch()} disabled={!liveUrl || fetchingIcon}>
+                {icon.url ? 'Fetch again' : 'Fetch icon'}
+              </Button>
+              <Button size="sm" icon={<Upload className="size-4" aria-hidden="true" />} onClick={() => iconFileRef.current?.click()} disabled={uploadingIcon !== null}>
+                {icon.url ? 'Replace icon' : 'Upload icon'}
+              </Button>
+              {icon.url && (
+                <Button size="sm" variant="ghost" onClick={() => setIcon({ url: null, key: null, source: null })}>
+                  Remove
+                </Button>
+              )}
+              <input ref={iconFileRef} type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" tabIndex={-1} aria-hidden="true" onChange={(e) => onIconFile(e.target.files?.[0])} />
+            </div>
+          </div>
+          <p className="text-xs text-muted">
+            Shown on the project card in place of the number.{' '}
+            {icon.source === 'site' ? 'Fetched from the live site.' : icon.source === 'service' ? 'Fetched from a favicon lookup.' : icon.source === 'upload' ? 'Uploaded icon.' : 'If the fetch fails, upload an icon. PNG, JPG or WEBP up to 5 MB.'}
+          </p>
         </div>
 
         {message && (
