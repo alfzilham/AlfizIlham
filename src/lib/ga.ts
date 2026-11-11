@@ -123,6 +123,33 @@ export async function getAnalytics(range: Range = '7d'): Promise<AnalyticsResult
     const totalRow = (totals[0].rows?.[0] ?? {}) as Row;
     const countryRows = (countries[0].rows ?? []) as Row[];
 
+    // GA only returns periods that had traffic. Fill the gaps with zeros so the chart always has a full line.
+    const fillSeries = (rows: Row[]) => {
+      const found = new Map<string, { users: number; views: number }>();
+      for (const r of rows) found.set(dim(r, 0), { users: met(r, 0), views: met(r, 1) });
+      const keys = new Set<string>(found.keys());
+      const now = new Date();
+      const pad = (n: number) => String(n).padStart(2, '0');
+      if (seriesDim === 'hour') {
+        for (let h = 0; h < 24; h++) keys.add(pad(h));
+      } else if (seriesDim === 'yearMonth') {
+        for (let i = 0; i < 12; i++) {
+          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          keys.add(`${d.getFullYear()}${pad(d.getMonth() + 1)}`);
+        }
+      } else {
+        const days = range === '30d' ? 30 : 7;
+        for (let i = 0; i < days; i++) {
+          const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+          keys.add(`${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`);
+        }
+      }
+      let sorted = [...keys].sort();
+      // The server clock and the GA property can sit in different time zones; keep only the newest N days.
+      if (seriesDim === 'date') sorted = sorted.slice(-(range === '30d' ? 30 : 7));
+      return sorted.map((key) => ({ key, users: found.get(key)?.users ?? 0, views: found.get(key)?.views ?? 0 }));
+    };
+
     const label = (raw: string) => {
       if (seriesDim === 'hour') return `${raw}:00`;
       if (seriesDim === 'yearMonth') return MONTHS[Number(raw.slice(4, 6)) - 1] ?? raw;
@@ -143,7 +170,7 @@ export async function getAnalytics(range: Range = '7d'): Promise<AnalyticsResult
         bounceRate: met(totalRow, 3),
         countries: countryRows.length,
       },
-      series: ((series[0].rows ?? []) as Row[]).map((r) => ({ label: label(dim(r, 0)), users: met(r, 0), views: met(r, 1) })),
+      series: fillSeries((series[0].rows ?? []) as Row[]).map((p) => ({ label: label(p.key), users: p.users, views: p.views })),
       weekdays: (() => {
         const map = new Map<number, number>();
         for (const r of (weekdays[0].rows ?? []) as Row[]) map.set(Number(dim(r, 0)), met(r, 0));
