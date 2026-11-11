@@ -60,11 +60,11 @@ function Preview({ p, onOpen, className }: { p: PublicProject; onOpen: () => voi
       type="button"
       onClick={onOpen}
       aria-label={`View details of ${p.title}`}
-      className={cn('flex cursor-zoom-in items-center justify-center overflow-hidden border-[1.5px] border-bg/20 bg-[#d6d3ce]', className)}
+      className={cn('relative flex cursor-zoom-in items-center justify-center overflow-hidden border-[1.5px] border-bg/20 bg-[#d6d3ce]', className)}
     >
       {p.imageUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={p.imageUrl} alt="" loading="lazy" className="size-full object-cover" />
+        <img src={p.imageUrl} alt="" loading="lazy" className="absolute inset-0 size-full max-w-none object-cover object-top" />
       ) : (
         <span className="flex flex-col items-center gap-2 text-bg/70">
           <ImageIcon className="size-6" aria-hidden="true" />
