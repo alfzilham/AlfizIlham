@@ -15,7 +15,7 @@ export default async function CertificatesPage() {
     await db.category.createMany({ data: DEFAULT_CATEGORIES.map((name) => ({ name })), skipDuplicates: true });
   }
   const [certificates, categories] = await Promise.all([
-    db.certificate.findMany({ orderBy: { createdAt: 'desc' }, include: { category: true } }),
+    db.certificate.findMany({ orderBy: [{ pinnedAt: { sort: 'desc', nulls: 'last' } }, { createdAt: 'desc' }], include: { category: true } }),
     db.category.findMany({ orderBy: { name: 'asc' }, include: { _count: { select: { certificates: true } } } }),
   ]);
   const published = certificates.filter((c) => c.status === 'PUBLISHED').length;
@@ -34,6 +34,8 @@ export default async function CertificatesPage() {
         fileUrl: c.fileUrl,
         fileKey: c.fileKey,
         fileType: c.fileType as 'pdf' | 'image',
+        credentialId: c.credentialId,
+        pinned: c.pinnedAt !== null,
         status: c.status,
         views: c.views,
         updatedAt: c.updatedAt.toISOString(),
