@@ -74,35 +74,47 @@ async function copyToStorage(imageUrl: string) {
   return { url: publicUrl(key), key };
 }
 
-const ICON_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/avif']);
+/** Identifies an image by its first bytes, so a wrong content-type or an HTML error page cannot slip through. */
+function sniffImage(b: Uint8Array): string | null {
+  if (b.length < 12) return null;
+  if (b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47) return 'image/png';
+  if (b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return 'image/jpeg';
+  if (b[0] === 0x47 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x38) return 'image/gif';
+  if (b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46 && b[8] === 0x57 && b[9] === 0x45 && b[10] === 0x42 && b[11] === 0x50) return 'image/webp';
+  if (b[0] === 0x00 && b[1] === 0x00 && b[2] === 0x01 && b[3] === 0x00) return 'image/x-icon';
+  return null;
+}
 
-/** Icon links of a page, best first: apple-touch-icon, then the largest declared size. SVG and ICO are skipped (not storable). */
+/** Icon links of a page, best first: apple-touch-icon, then raster icons by size, then ICO. SVG is skipped (not storable). Site-root defaults come last. */
 function iconCandidates(html: string, pageUrl: URL) {
   const found: { href: string; score: number }[] = [];
   for (const tag of html.match(/<link\b[^>]*>/gi) ?? []) {
     const rel = /\brel=["']([^"']+)["']/i.exec(tag)?.[1]?.toLowerCase() ?? '';
     const href = /\bhref=["']([^"']+)["']/i.exec(tag)?.[1];
     if (!href || !/\b(apple-touch-icon(-precomposed)?|icon)\b/.test(rel)) continue;
-    if (/\.(svg|ico)(\?|$)/i.test(href)) continue;
+    if (/\.svg(\?|$)/i.test(href) || /image\/svg/i.test(tag)) continue;
     const size = Number(/\bsizes=["'](\d+)x\d+["']/i.exec(tag)?.[1] ?? 0);
+    const base = rel.includes('apple-touch-icon') ? 3000 : /\.ico(\?|$)/i.test(href) ? 1000 : 2000;
     try {
-      found.push({ href: new URL(href.replace(/&amp;/g, '&'), pageUrl).toString(), score: (rel.includes('apple-touch-icon') ? 1000 : 0) + size });
+      found.push({ href: new URL(href.replace(/&amp;/g, '&'), pageUrl).toString(), score: base + size });
     } catch {
       /* skip a malformed href */
     }
   }
-  return found.sort((a, b) => b.score - a.score).map((f) => f.href);
+  const declared = found.sort((a, b) => b.score - a.score).map((f) => f.href);
+  const defaults = ['/apple-touch-icon.png', '/favicon.ico'].map((p) => new URL(p, pageUrl.origin).toString());
+  return Array.from(new Set([...declared, ...defaults]));
 }
 
-/** Copies a remote icon into our bucket. Only raster types the bucket accepts, up to 2 MB. */
+/** Copies a remote icon into our bucket. Raster or ICO only, up to 2 MB, checked by content, not by header. */
 async function copyIconToStorage(iconUrl: string) {
   assertPublicUrl(iconUrl);
   const res = await fetchWithTimeout(iconUrl, 10000);
-  if (!res.ok) throw new Error('Could not download the icon.');
-  const type = (res.headers.get('content-type') ?? '').split(';')[0].trim().toLowerCase().replace('image/jpg', 'image/jpeg');
-  if (!ICON_TYPES.has(type)) throw new Error('The icon is not a PNG, JPG, WEBP, GIF or AVIF image.');
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const buf = new Uint8Array(await res.arrayBuffer());
-  if (buf.byteLength < 100 || buf.byteLength > 2 * 1024 * 1024) throw new Error('The icon has an unusable size.');
+  if (buf.byteLength > 2 * 1024 * 1024) throw new Error('larger than 2 MB');
+  const type = sniffImage(buf);
+  if (!type) throw new Error('not a PNG, JPG, WEBP, GIF or ICO image');
   if (!storageConfigured()) return { url: iconUrl, key: null as string | null };
   const key = newKey('projects', type);
   await putObject(key, buf, type);
@@ -111,24 +123,46 @@ async function copyIconToStorage(iconUrl: string) {
 
 export type IconResult = { url: string; key: string | null; source: 'site' | 'service' };
 
-/** Icon declared by the site first, then a favicon lookup service. Throws when neither works. */
+const short = (u: string) => {
+  try {
+    const x = new URL(u);
+    return `${x.hostname}${x.pathname}`.slice(0, 60);
+  } catch {
+    return u.slice(0, 60);
+  }
+};
+
+/** Icon declared by the site first, then a favicon lookup service. Throws with the reason of each failed step. */
 export async function fetchIcon(liveUrl: string): Promise<IconResult> {
   const pageUrl = assertPublicUrl(liveUrl);
-  const res = await fetchWithTimeout(pageUrl.toString(), 8000, { headers: { accept: 'text/html' } }).catch(() => null);
-  const html = res?.ok ? (await res.text()).slice(0, 400_000) : '';
-  for (const candidate of iconCandidates(html, pageUrl).slice(0, 4)) {
+  const notes: string[] = [];
+
+  let html = '';
+  try {
+    const res = await fetchWithTimeout(pageUrl.toString(), 8000, { headers: { accept: 'text/html' } });
+    if (res.ok) html = (await res.text()).slice(0, 400_000);
+    else notes.push(`page returned HTTP ${res.status}`);
+  } catch {
+    notes.push('page could not be reached');
+  }
+
+  for (const candidate of iconCandidates(html, pageUrl).slice(0, 5)) {
     try {
       return { ...(await copyIconToStorage(candidate)), source: 'site' };
-    } catch {
-      /* try the next candidate */
+    } catch (err) {
+      notes.push(`${short(candidate)}: ${err instanceof Error ? err.message : 'failed'}`);
     }
   }
+
   const service = `https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&url=${encodeURIComponent(pageUrl.origin)}&size=128`;
   try {
     return { ...(await copyIconToStorage(service)), source: 'service' };
-  } catch {
-    throw new Error('No icon found for this link. Upload an icon instead.');
+  } catch (err) {
+    notes.push(`favicon service: ${err instanceof Error ? err.message : 'failed'}`);
   }
+
+  console.error('fetchIcon failed', liveUrl, notes);
+  throw new Error(`No icon found. ${notes.slice(-3).join('; ')}. Upload an icon instead.`);
 }
 
 export type PreviewResult = { url: string; key: string | null; source: 'og' | 'screenshot' };
