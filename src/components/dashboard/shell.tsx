@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { logout } from '@/app/dashboard/actions';
 import { FeedbackProvider } from './feedback';
+import { SessionGuard } from './session-guard';
 import { cn, initials } from '@/lib/utils';
 
 const NAV = [
@@ -40,13 +41,14 @@ type Props = {
   children: React.ReactNode;
   profile: { fullName: string; username: string; avatarUrl: string };
   counts: { pending: number; unread: number };
+  session: { expiresAt: number; serverNow: number };
 };
 
 function isActive(pathname: string, href: string) {
   return href === '/dashboard' ? pathname === href : pathname.startsWith(href.split('?')[0]);
 }
 
-export function DashboardShell({ children, profile, counts }: Props) {
+export function DashboardShell({ children, profile, counts, session }: Props) {
   const pathname = usePathname();
   const badge = (href: string) => (href.endsWith('testimonials') ? counts.pending : href.endsWith('messages') ? counts.unread : 0);
 
@@ -54,6 +56,7 @@ export function DashboardShell({ children, profile, counts }: Props) {
     <FeedbackProvider>
     <div className="relative isolate min-h-dvh">
       <DashboardBackdrop />
+      <SessionGuard expiresAt={session.expiresAt} serverNow={session.serverNow} />
 
       {/* Desktop rail */}
       <aside className="glass fixed top-5 bottom-5 left-5 z-40 hidden w-[76px] flex-col items-center rounded-[28px] py-5 lg:flex">
