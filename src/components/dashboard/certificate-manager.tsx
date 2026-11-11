@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState, useTransition } from 'react';
 import { motion } from 'framer-motion';
-import { Award, ExternalLink, EyeOff, FileText, Globe, Pencil, Plus, Trash2, Upload } from 'lucide-react';
+import { Award, ExternalLink, EyeOff, FileText, Globe, Pencil, Pin, PinOff, Plus, Trash2, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Field, Segmented } from '@/components/ui/field';
 import { Modal } from '@/components/ui/modal';
@@ -11,7 +11,7 @@ import { Card, CardHead, Empty, PageTitle, StatusDot, Thumb } from './ui';
 import { RowMenu } from './row-menu';
 import { useFeedback } from './feedback';
 import { uploadFile } from './upload';
-import { addCategory, deleteCertificate, saveCertificate, setCertificateStatus } from '@/app/dashboard/actions';
+import { addCategory, deleteCertificate, saveCertificate, setCertificatePinned, setCertificateStatus } from '@/app/dashboard/actions';
 import { cn, relativeDay } from '@/lib/utils';
 
 export type CertificateRow = {
@@ -23,6 +23,8 @@ export type CertificateRow = {
   fileUrl: string;
   fileKey: string | null;
   fileType: 'pdf' | 'image';
+  credentialId: string | null;
+  pinned: boolean;
   status: 'DRAFT' | 'PUBLISHED';
   views: number;
   updatedAt: string;
@@ -45,6 +47,12 @@ export function CertificateManager({ certificates, categories, stats }: { certif
       toast(res.ok ? (next === 'PUBLISHED' ? 'Certificate published' : 'Certificate moved to drafts') : res.message, res.ok ? 'ok' : 'error');
     });
 
+  const togglePin = (c: CertificateRow) =>
+    start(async () => {
+      const res = await setCertificatePinned(c.id, !c.pinned);
+      toast(res.ok ? (c.pinned ? 'Certificate unpinned' : 'Certificate pinned to the top') : res.message, res.ok ? 'ok' : 'error');
+    });
+
   const remove = async (c: CertificateRow) => {
     if (!(await confirm({ title: `Delete ${c.title}?`, body: 'The certificate and its file are removed for good.', confirm: 'Delete certificate', danger: true }))) return;
     const res = await deleteCertificate(c.id);
@@ -53,6 +61,7 @@ export function CertificateManager({ certificates, categories, stats }: { certif
 
   const menu = (c: CertificateRow) => [
     { label: 'Edit', icon: <Pencil />, onSelect: () => setEditing(c) },
+    c.pinned ? { label: 'Unpin', icon: <PinOff />, onSelect: () => togglePin(c) } : { label: 'Pin to top', icon: <Pin />, onSelect: () => togglePin(c) },
     c.status === 'PUBLISHED' ? { label: 'Move to drafts', icon: <EyeOff />, onSelect: () => toggle(c) } : { label: 'Publish', icon: <Globe />, onSelect: () => toggle(c) },
     { label: 'Open file', icon: <ExternalLink />, onSelect: () => window.open(c.fileUrl, '_blank', 'noopener') },
     { label: 'Delete', icon: <Trash2 />, onSelect: () => remove(c), danger: true },
@@ -124,7 +133,15 @@ export function CertificateManager({ certificates, categories, stats }: { certif
                         <button type="button" onClick={() => setEditing(c)} className="flex min-w-0 items-center gap-3.5 text-left">
                           <Thumb>{c.fileType === 'image' ? <img src={c.fileUrl} alt="" className="size-full object-cover" /> : <FileText />}</Thumb>
                           <span className="min-w-0">
-                            <span className="block truncate font-medium hover:underline">{c.title}</span>
+                            <span className="flex min-w-0 items-center gap-1.5">
+                              <span className="truncate font-medium hover:underline">{c.title}</span>
+                              {c.pinned && (
+                                <>
+                                  <Pin className="size-3.5 shrink-0 text-accent" aria-hidden="true" />
+                                  <span className="sr-only">Pinned</span>
+                                </>
+                              )}
+                            </span>
                             <span className="mt-0.5 block truncate text-xs text-muted">{c.issuer}</span>
                           </span>
                         </button>
@@ -151,7 +168,15 @@ export function CertificateManager({ certificates, categories, stats }: { certif
                   <div className="flex items-start gap-3">
                     <Thumb>{c.fileType === 'image' ? <img src={c.fileUrl} alt="" className="size-full object-cover" /> : <FileText />}</Thumb>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate font-medium">{c.title}</p>
+                      <p className="flex min-w-0 items-center gap-1.5 font-medium">
+                        <span className="truncate">{c.title}</span>
+                        {c.pinned && (
+                          <>
+                            <Pin className="size-3.5 shrink-0 text-accent" aria-hidden="true" />
+                            <span className="sr-only">Pinned</span>
+                          </>
+                        )}
+                      </p>
                       <p className="mt-0.5 truncate text-xs text-muted">
                         {c.issuer}, {c.category}
                       </p>
@@ -202,6 +227,7 @@ function CertificateModal({
 }) {
   const [title, setTitle] = useState(certificate?.title ?? '');
   const [issuer, setIssuer] = useState(certificate?.issuer ?? '');
+  const [credentialId, setCredentialId] = useState(certificate?.credentialId ?? '');
   const [categoryId, setCategoryId] = useState(certificate?.categoryId ?? '');
   const [file, setFile] = useState<{ url: string; key: string | null; type: 'pdf' | 'image'; name?: string } | null>(
     certificate ? { url: certificate.fileUrl, key: certificate.fileKey, type: certificate.fileType } : null,
@@ -256,6 +282,7 @@ function CertificateModal({
         fileUrl: file?.url ?? '',
         fileKey: file?.key ?? null,
         fileType: file?.type ?? 'pdf',
+        credentialId,
         status,
       });
       if (res.ok) onSaved(certificate ? 'Certificate updated' : status === 'PUBLISHED' ? 'Certificate published' : 'Certificate saved as draft');
@@ -341,6 +368,7 @@ function CertificateModal({
             )}
           />
         </div>
+        <Field label="Credential ID" value={credentialId} onChange={(e) => setCredentialId(e.target.value)} placeholder="For example ABC-1234" hint="Optional. Shown with the certificate on the site." error={errors.credentialId} />
 
         <div className="flex flex-col gap-2">
           <span id="cert-file-label" className="text-[13px] font-medium">
