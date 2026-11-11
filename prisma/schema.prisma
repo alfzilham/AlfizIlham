@@ -71,6 +71,7 @@ model ApiKey {
   lastUsedAt   DateTime?
   revokedAt    DateTime?
   createdAt    DateTime      @default(now())
+  scopes       String[]      @default(["feedback:write"])
   testimonials Testimonial[]
 }
 
@@ -86,6 +87,7 @@ model Testimonial {
   apiKeyId  String?
   apiKey    ApiKey?        @relation(fields: [apiKeyId], references: [id], onDelete: SetNull)
   idempotencyKey String?
+  avatarUrl String?
   status    FeedbackStatus @default(PENDING)
   createdAt DateTime       @default(now())
   updatedAt DateTime       @updatedAt
@@ -133,4 +135,20 @@ model RateLimit {
   key     String   @id
   count   Int
   resetAt DateTime
+}
+
+model McpLog {
+  id         String   @id @default(cuid())
+  apiKeyId   String
+  project    String
+  method     String
+  tool       String?
+  status     String
+  httpStatus Int
+  durationMs Int
+  error      String?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([apiKeyId, createdAt])
 }
