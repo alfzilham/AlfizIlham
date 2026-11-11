@@ -135,10 +135,10 @@ export function ProjectManager({ projects, stats, initialOpen }: { projects: Pro
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-left text-[13px] text-muted">
-                    <th scope="col" className="pb-3 font-normal">Project</th>
-                    <th scope="col" className="pb-3 font-normal">Status</th>
-                    <th scope="col" className="pb-3 font-normal">Views</th>
-                    <th scope="col" className="hidden pb-3 font-normal lg:table-cell">Updated</th>
+                    <th scope="col" className="w-full pb-3 pr-4 font-normal">Project</th>
+                    <th scope="col" className="pb-3 pr-4 font-normal">Status</th>
+                    <th scope="col" className="pb-3 pr-4 font-normal">Views</th>
+                    <th scope="col" className="hidden pb-3 pr-4 font-normal lg:table-cell">Updated</th>
                     <th scope="col" className="pb-3 font-normal">
                       <span className="sr-only">Actions</span>
                     </th>
@@ -147,12 +147,12 @@ export function ProjectManager({ projects, stats, initialOpen }: { projects: Pro
                 <tbody>
                   {rows.map((p) => (
                     <motion.tr key={p.id} layout className="border-t border-white/[0.07]">
-                      <td className="py-3 pr-4">
+                      <td className="w-full max-w-0 py-3 pr-4">
                         <button type="button" onClick={() => setEditing(p)} className="flex min-w-0 items-center gap-3.5 text-left">
                           <Thumb>{p.imageUrl ? <img src={p.imageUrl} alt="" className="size-full object-cover" /> : <ImageIcon />}</Thumb>
                           <span className="min-w-0">
                             <span className="block truncate font-medium hover:underline">{p.title}</span>
-                            <span className="mt-0.5 block truncate text-xs text-muted">{p.techStack.join(', ') || 'No stack listed'}</span>
+                            <span className="mt-0.5 block truncate text-xs text-muted" title={p.techStack.join(', ') || undefined}>{p.techStack.join(', ') || 'No stack listed'}</span>
                           </span>
                         </button>
                       </td>
