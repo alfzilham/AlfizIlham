@@ -30,7 +30,7 @@ export default async function ProjectsPage({ searchParams }: { searchParams: Pro
             <Kpi label="Total views" value={compact(totalViews)} icon={<Eye />} />
           </div>
           {published.length > 0 && (
-            <div className="grid gap-4 sm:gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
+            <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
               <Card>
                 <CardHead title="Views per project" subtitle="Opens of each project on the site" />
                 <BarChart
