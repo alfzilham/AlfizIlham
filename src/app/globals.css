@@ -216,12 +216,12 @@ html.lenis body {
   z-index: 30;
 }
 .pj-cell:has(:focus-visible) .pj {
-  margin-bottom: -200px;
+  margin-bottom: calc(44px - var(--pj-h, 244px));
   transform: scale(1.035);
   box-shadow: 0 36px 70px rgba(0, 0, 0, 0.6);
 }
 .pj-cell:has(:focus-visible) .pj-zone {
-  height: 244px;
+  height: var(--pj-h, 244px);
 }
 .pj-cell:has(:focus-visible) .pj-img {
   transform: translateY(0);
@@ -234,12 +234,12 @@ html.lenis body {
     z-index: 30;
   }
   .pj-cell:hover .pj {
-    margin-bottom: -200px;
+    margin-bottom: calc(44px - var(--pj-h, 244px));
     transform: scale(1.035);
     box-shadow: 0 36px 70px rgba(0, 0, 0, 0.6);
   }
   .pj-cell:hover .pj-zone {
-    height: 244px;
+    height: var(--pj-h, 244px);
   }
   .pj-cell:hover .pj-img {
     transform: translateY(0);
