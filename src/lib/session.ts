@@ -12,7 +12,7 @@ function secretKey() {
   return new TextEncoder().encode(secret);
 }
 
-export type SessionPayload = { sub: string; role: 'admin'; ts: number };
+export type SessionPayload = { sub: string; role: 'admin'; ts: number; exp: number };
 
 export async function signSession(username: string) {
   return new SignJWT({ role: 'admin', ts: Date.now() })
@@ -28,7 +28,7 @@ export async function verifySessionToken(token: string | undefined): Promise<Ses
   try {
     const { payload } = await jwtVerify(token, secretKey(), { algorithms: ['HS256'] });
     if (payload.role !== 'admin' || typeof payload.sub !== 'string') return null;
-    return { sub: payload.sub, role: 'admin', ts: typeof payload.ts === 'number' ? payload.ts : 0 };
+    return { sub: payload.sub, role: 'admin', ts: typeof payload.ts === 'number' ? payload.ts : 0, exp: typeof payload.exp === 'number' ? payload.exp : 0 };
   } catch {
     return null;
   }
