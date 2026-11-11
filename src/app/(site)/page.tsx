@@ -34,7 +34,7 @@ async function loadContent() {
         where: { status: 'APPROVED' },
         orderBy: { createdAt: 'desc' },
         take: 24,
-        select: { id: true, name: true, role: true, company: true, message: true, rating: true },
+        select: { id: true, name: true, role: true, company: true, message: true, rating: true, avatarUrl: true },
       }),
     ]);
     return {
