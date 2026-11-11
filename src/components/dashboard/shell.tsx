@@ -1,5 +1,6 @@
 'use client';
 
+import { DashboardBackdrop } from './backdrop';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -52,15 +53,7 @@ export function DashboardShell({ children, profile, counts }: Props) {
   return (
     <FeedbackProvider>
     <div className="relative min-h-dvh">
-      {/* Soft orange glow, same family as the landing footer, so the glass surfaces have something to refract. */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none fixed inset-0 -z-10"
-        style={{
-          background:
-            'radial-gradient(85% 75% at 100% 100%, rgba(255,160,100,0.34) 0%, rgba(226,83,26,0.28) 26%, rgba(120,40,10,0.2) 52%, rgba(10,10,10,0) 80%), radial-gradient(60% 60% at 0% 100%, rgba(143,45,10,0.3), rgba(10,10,10,0) 72%), radial-gradient(55% 40% at 50% 0%, rgba(255,106,26,0.09), rgba(10,10,10,0) 70%), #0a0a0a',
-        }}
-      />
+      <DashboardBackdrop />
 
       {/* Desktop rail */}
       <aside className="glass fixed top-5 bottom-5 left-5 z-40 hidden w-[76px] flex-col items-center rounded-[28px] py-5 lg:flex">
