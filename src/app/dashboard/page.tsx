@@ -36,7 +36,7 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
       />
 
       <div className="grid gap-4 sm:gap-6">
-        <div className="grid grid-cols-2 gap-4 sm:gap-6 xl:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-4">
           <Kpi label="Visitors" value={ga.configured ? compact(ga.totals.users) : '0'} icon={<Users />} spark={ga.configured ? ga.series.map((s) => s.users) : undefined} />
           <Kpi label="Page views" value={ga.configured ? compact(ga.totals.views) : '0'} icon={<Eye />} spark={ga.configured ? ga.series.map((s) => s.views) : undefined} />
           <Kpi label="Countries" value={ga.configured ? String(ga.totals.countries) : '0'} icon={<Globe />} />
