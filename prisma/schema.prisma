@@ -29,6 +29,9 @@ model Project {
   imageUrl    String?
   imageKey    String?
   imageSource String?
+  iconUrl     String?
+  iconKey     String?
+  iconSource  String?
   status      PublishStatus @default(DRAFT)
   views       Int           @default(0)
   sortOrder   Int           @default(0)

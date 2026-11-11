@@ -10,7 +10,7 @@ import { rateLimit } from '@/lib/rate-limit';
 import { SESSION_MAX_AGE } from '@/lib/session';
 import { certificateSchema, fieldErrors, projectSchema, type CertificateInput, type ProjectInput } from '@/lib/validation';
 import { ALLOWED_TYPES, deleteObject, newKey, presignUpload, publicUrl, storageConfigured } from '@/lib/storage';
-import { fetchPreview } from '@/lib/preview';
+import { fetchIcon, fetchPreview } from '@/lib/preview';
 import { generateKey } from '@/lib/api-keys';
 import { emailConfigured, sendReply } from '@/lib/email';
 import { getSettings, saveSettings, type SiteSettings } from '@/lib/settings';
@@ -79,6 +79,16 @@ export async function fetchProjectPreview(liveUrl: string): Promise<Result<{ url
   }
 }
 
+export async function fetchProjectIcon(liveUrl: string): Promise<Result<{ url: string; key: string | null; source: 'site' | 'service' }>> {
+  await requireAdmin();
+  try {
+    const res = await fetchIcon(liveUrl);
+    return { ok: true, ...res };
+  } catch (err) {
+    return failure(err, 'Could not fetch an icon for this link.');
+  }
+}
+
 export async function saveProject(input: ProjectInput): Promise<Result<{ id: string }>> {
   await requireAdmin();
   const parsed = projectSchema.safeParse(input);
@@ -93,14 +103,18 @@ export async function saveProject(input: ProjectInput): Promise<Result<{ id: str
     imageUrl: data.imageUrl ?? null,
     imageKey: data.imageKey ?? null,
     imageSource: data.imageSource ?? null,
+    iconUrl: data.iconUrl ?? null,
+    iconKey: data.iconKey ?? null,
+    iconSource: data.iconSource ?? null,
     status: data.status,
   };
   try {
     if (id) {
-      const before = await db.project.findUnique({ where: { id }, select: { imageKey: true } });
+      const before = await db.project.findUnique({ where: { id }, select: { imageKey: true, iconKey: true } });
       if (!before) return { ok: false, message: 'This project no longer exists.' };
       await db.project.update({ where: { id }, data: row });
       if (before.imageKey && before.imageKey !== row.imageKey) await deleteObject(before.imageKey);
+      if (before.iconKey && before.iconKey !== row.iconKey) await deleteObject(before.iconKey);
       refresh();
       return { ok: true, id };
     }
@@ -129,6 +143,7 @@ export async function deleteProject(id: string): Promise<Result> {
   try {
     const p = await db.project.delete({ where: { id } });
     await deleteObject(p.imageKey);
+    await deleteObject(p.iconKey);
     refresh();
     return { ok: true };
   } catch (err) {

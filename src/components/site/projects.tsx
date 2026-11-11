@@ -20,6 +20,7 @@ export type PublicProject = {
   liveUrl: string | null;
   githubUrl: string | null;
   imageUrl: string | null;
+  iconUrl: string | null;
 };
 
 type Item = { kind: 'project'; p: PublicProject; n: number } | { kind: 'cta' };
@@ -93,6 +94,18 @@ function Preview({
   );
 }
 
+/** Project icon in the card's top-left slot. Falls back to the project number when there is no icon or it fails to load. */
+function Mark({ p, num }: { p: PublicProject; num: string }) {
+  const [broken, setBroken] = useState(false);
+  if (p.iconUrl && !broken) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={p.iconUrl} alt="" loading="lazy" onError={() => setBroken(true)} className="size-11 rounded-xl object-contain" />
+    );
+  }
+  return <>{num}</>;
+}
+
 function ProjectCard({ p, n, compact, onOpen }: { p: PublicProject; n: number; compact?: boolean; onOpen: () => void }) {
   const num = String(n).padStart(2, '0');
   const cell = useRef<HTMLDivElement>(null);
@@ -122,7 +135,7 @@ function ProjectCard({ p, n, compact, onOpen }: { p: PublicProject; n: number; c
       >
         {p.title}
       </h3>
-      <p className="line-clamp-4 text-sm leading-normal text-pretty text-bg/70">{p.description}</p>
+      <p className="text-sm leading-normal text-pretty text-bg/70">{p.description}</p>
     </>
   );
 
@@ -132,7 +145,7 @@ function ProjectCard({ p, n, compact, onOpen }: { p: PublicProject; n: number; c
         <Notch />
         <GoButton p={p} onOpen={onOpen} />
         <div aria-hidden="true" className="relative z-[2] flex h-14 items-center font-display text-[40px] leading-none font-bold tracking-[-0.03em]">
-          {num}
+          <Mark p={p} num={num} />
         </div>
         <Preview p={p} onOpen={onOpen} className="mt-1 aspect-[16/10] w-full rounded-2xl" />
         <div className="flex flex-col gap-3">{body}</div>
@@ -146,7 +159,7 @@ function ProjectCard({ p, n, compact, onOpen }: { p: PublicProject; n: number; c
         <Notch />
         <GoButton p={p} onOpen={onOpen} />
         <div aria-hidden="true" className="relative z-[2] flex h-14 items-center font-display text-[40px] leading-none font-bold tracking-[-0.03em]">
-          {num}
+          <Mark p={p} num={num} />
         </div>
         <div className="pj-zone relative z-[1] mt-3">
           <Preview p={p} onOpen={onOpen} natural btnRef={preview} className="pj-img absolute inset-x-0 bottom-0 rounded-t-2xl border-b-0" />

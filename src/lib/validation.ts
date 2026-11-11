@@ -18,6 +18,9 @@ export const projectSchema = z.object({
   imageUrl: z.string().max(1000).optional().nullable(),
   imageKey: z.string().max(300).optional().nullable(),
   imageSource: z.enum(['og', 'screenshot', 'upload']).optional().nullable(),
+  iconUrl: z.string().max(1000).optional().nullable(),
+  iconKey: z.string().max(300).optional().nullable(),
+  iconSource: z.enum(['site', 'service', 'upload']).optional().nullable(),
   status: z.enum(['DRAFT', 'PUBLISHED']),
 });
 export type ProjectInput = z.input<typeof projectSchema>;
