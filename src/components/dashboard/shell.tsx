@@ -52,7 +52,7 @@ export function DashboardShell({ children, profile, counts }: Props) {
 
   return (
     <FeedbackProvider>
-    <div className="relative min-h-dvh">
+    <div className="relative isolate min-h-dvh">
       <DashboardBackdrop />
 
       {/* Desktop rail */}
