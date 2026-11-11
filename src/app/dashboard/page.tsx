@@ -35,15 +35,38 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
         }
       />
 
-      <div className="grid gap-4 sm:gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_380px]">
-        <div className="grid grid-cols-2 gap-4 sm:gap-6 xl:col-span-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:gap-6">
+        <div className="grid grid-cols-2 gap-4 sm:gap-6 xl:grid-cols-4">
           <Kpi label="Visitors" value={ga.configured ? compact(ga.totals.users) : '0'} icon={<Users />} spark={ga.configured ? ga.series.map((s) => s.users) : undefined} />
           <Kpi label="Page views" value={ga.configured ? compact(ga.totals.views) : '0'} icon={<Eye />} spark={ga.configured ? ga.series.map((s) => s.views) : undefined} />
           <Kpi label="Countries" value={ga.configured ? String(ga.totals.countries) : '0'} icon={<Globe />} />
           <Kpi label="Pending feedback" value={String(pendingCount)} icon={<MessageSquareQuote />} />
         </div>
 
-        <Card className="xl:row-span-2">
+        <Card>
+          <CardHead
+            title="Total traffic"
+            subtitle="Page views over time"
+            right={<TabLinks label="Traffic range" active={range} items={RANGES.map((x) => ({ key: x.id, label: x.label, href: `/dashboard?range=${x.id}` }))} />}
+          />
+          {ga.configured ? (
+            <>
+              <p className="-mt-1 mb-4 font-display text-4xl font-bold">{formatNumber(ga.totals.views)}</p>
+              <AreaChart
+                labels={ga.series.map((s) => s.label)}
+                series={ga.series.map((s) => s.views)}
+                height={230}
+                summary={`Page views over the selected range, ${formatNumber(ga.totals.views)} in total.`}
+              />
+            </>
+          ) : (
+            <NotConfigured {...GA_MISSING} />
+          )}
+        </Card>
+      </div>
+
+      <div className="grid gap-4 sm:gap-6 xl:grid-cols-2">
+        <Card>
           <CardHead
             title="Live visitors"
             subtitle="Active in the last 30 minutes"
@@ -83,29 +106,21 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
           </LinkButton>
         </Card>
 
-        <Card className="xl:col-span-2">
-          <CardHead
-            title="Total traffic"
-            subtitle="Page views over time"
-            right={<TabLinks label="Traffic range" active={range} items={RANGES.map((x) => ({ key: x.id, label: x.label, href: `/dashboard?range=${x.id}` }))} />}
-          />
+        <Card>
+          <CardHead title="Visitors by day" subtitle="Last 7 days" />
           {ga.configured ? (
-            <>
-              <p className="-mt-1 mb-4 font-display text-4xl font-bold">{formatNumber(ga.totals.views)}</p>
-              <AreaChart
-                labels={ga.series.map((s) => s.label)}
-                series={ga.series.map((s) => s.views)}
-                height={230}
-                summary={`Page views over the selected range, ${formatNumber(ga.totals.views)} in total.`}
-              />
-            </>
+            <BarChart
+              labels={ga.weekdays.map((d) => d.label)}
+              values={ga.weekdays.map((d) => d.users)}
+              summary={ga.weekdays.map((d) => `${d.label} ${d.users}`).join(', ')}
+            />
           ) : (
             <NotConfigured {...GA_MISSING} />
           )}
         </Card>
       </div>
 
-      <div className="grid gap-4 sm:gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_380px]">
+      <div className="grid gap-4 sm:gap-6 xl:grid-cols-2">
         <section className="acc-surface flex min-h-[260px] flex-col justify-between overflow-hidden rounded-[24px] p-6">
           <div>
             <h2 className="max-w-[14ch] font-display text-[28px] leading-tight font-bold text-white">
@@ -122,19 +137,6 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
             Review feedback
           </Link>
         </section>
-
-        <Card>
-          <CardHead title="Visitors by day" subtitle="Last 7 days" />
-          {ga.configured ? (
-            <BarChart
-              labels={ga.weekdays.map((d) => d.label)}
-              values={ga.weekdays.map((d) => d.users)}
-              summary={ga.weekdays.map((d) => `${d.label} ${d.users}`).join(', ')}
-            />
-          ) : (
-            <NotConfigured {...GA_MISSING} />
-          )}
-        </Card>
 
         <Card>
           <CardHead
