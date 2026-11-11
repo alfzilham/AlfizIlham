@@ -172,7 +172,7 @@ export async function saveCertificate(input: CertificateInput): Promise<Result<{
   const parsed = certificateSchema.safeParse(input);
   if (!parsed.success) return { ok: false, message: 'Please check the highlighted fields.', errors: fieldErrors(parsed.error) };
   const { id, ...data } = parsed.data;
-  const row = { ...data, fileKey: data.fileKey ?? null };
+  const row = { ...data, fileKey: data.fileKey ?? null, credentialId: data.credentialId?.trim() || null };
   try {
     if (id) {
       const before = await db.certificate.findUnique({ where: { id }, select: { fileKey: true } });
@@ -198,6 +198,17 @@ export async function setCertificateStatus(id: string, status: 'DRAFT' | 'PUBLIS
     return { ok: true };
   } catch (err) {
     return failure(err, 'Could not update the certificate.');
+  }
+}
+
+export async function setCertificatePinned(id: string, pinned: boolean): Promise<Result> {
+  await requireAdmin();
+  try {
+    await db.certificate.update({ where: { id }, data: { pinnedAt: pinned ? new Date() : null } });
+    refresh();
+    return { ok: true };
+  } catch (err) {
+    return failure(err, 'Could not update the pin.');
   }
 }
 
