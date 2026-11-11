@@ -38,6 +38,8 @@ const EXT: Record<string, string> = {
   'image/webp': 'webp',
   'image/gif': 'gif',
   'image/avif': 'avif',
+  'image/x-icon': 'ico',
+  'image/vnd.microsoft.icon': 'ico',
   'application/pdf': 'pdf',
 };
 
