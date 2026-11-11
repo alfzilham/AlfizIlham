@@ -43,7 +43,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
         <Kpi label="Bounce rate" value={`${Math.round(ga.totals.bounceRate * 100)}%`} icon={<ArrowDown />} />
       </div>
 
-      <div className="grid gap-4 sm:gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+      <div className="grid gap-4 sm:gap-6">
         <Card>
           <CardHead
             title="Visitors and page views"
@@ -69,6 +69,9 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
             summary={`${formatNumber(ga.totals.users)} visitors and ${formatNumber(ga.totals.views)} page views in the selected range.`}
           />
         </Card>
+      </div>
+
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
         <Card>
           <CardHead title="Live visitors" subtitle="Active in the last 30 minutes" />
           <div className="flex items-baseline gap-3">
@@ -77,13 +80,14 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
           </div>
           <div className="mt-6">{ga.realtime.countries.length ? <HBars rows={ga.realtime.countries} /> : <p className="text-sm text-muted">Nobody is on the site right now.</p>}</div>
         </Card>
-      </div>
 
-      <div className="grid gap-4 sm:gap-6 md:grid-cols-2 xl:grid-cols-[1.15fr_1fr_1fr]">
-        <Card className="md:col-span-2 xl:col-span-1">
+        <Card>
           <CardHead title="Country counter" subtitle={`${ga.totals.countries} countries reached`} />
           {ga.countries.length ? <HBars rows={ga.countries.slice(0, 8)} format={formatNumber} /> : <p className="text-sm text-muted">No visits yet.</p>}
         </Card>
+      </div>
+
+      <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
         <Card>
           <CardHead title="Traffic sources" subtitle="Where visitors come from" />
           {ga.sources.length ? (
