@@ -26,6 +26,7 @@ export type Tab = (typeof TABS)[number]['id'];
 type Integrations = {
   endpoint: string;
   keys: { id: string; project: string; prefix: string; createdAt: string; lastUsedAt: string | null; revoked: boolean }[];
+  logs: { id: string; project: string; method: string; tool: string | null; status: string; httpStatus: number; durationMs: number; error: string | null; createdAt: string }[];
   ga: { connected: boolean; propertyId: string; measurementId: string };
   email: { connected: boolean; serviceId: string; autoReply: string; reply: string };
   storage: { connected: boolean; bucket: string };
@@ -337,6 +338,9 @@ function ReadOnly({ label, value }: { label: string; value: string }) {
   );
 }
 
+const logTime = (iso: string) =>
+  `${new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Jakarta', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(iso))} WIB`;
+
 function IntegrationsPanel({ data }: { data: Integrations }) {
   const { toast, confirm } = useFeedback();
   const [open, setOpen] = useState(false);
@@ -392,8 +396,8 @@ function IntegrationsPanel({ data }: { data: Integrations }) {
         <div className="flex flex-col gap-4">
           <Field label="Endpoint" readOnly value={data.endpoint} icon={<Link2 />} end={<CopyButton value={data.endpoint} label="Copy endpoint" />} className="font-mono" />
           <p className="text-[13px] leading-relaxed text-muted">
-            Connected projects call the tool <code className="font-mono text-fg">submit_feedback</code> with name, role, company, message, rating and project, sending
-            their key as <code className="font-mono text-fg">Authorization: Bearer</code>. Each submission waits for your approval.
+            Connected projects call the tool <code className="font-mono text-fg">submit_feedback</code> with name, role, company, message, rating, project, avatar_url and idempotency_key, sending
+            their key as <code className="font-mono text-fg">Authorization: Bearer</code>. Each submission waits for your approval. Connected projects can check reachability at <code className="font-mono text-fg">{data.endpoint}/health</code>.
           </p>
           {active.length === 0 && data.keys.length === 0 ? (
             <Empty icon={<Key />} title="No API keys yet" body="Create one key per project that should send feedback." />
@@ -442,6 +446,42 @@ function IntegrationsPanel({ data }: { data: Integrations }) {
             </div>
           )}
         </div>
+      </Card>
+
+      <Card>
+        <CardHead title="MCP activity" subtitle="Last 20 requests from connected projects, kept for 30 days" />
+        {data.logs.length === 0 ? (
+          <Empty icon={<Link2 />} title="No requests yet" body="Requests from connected projects appear here, with the reason when one fails." />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[560px] text-sm">
+              <thead>
+                <tr className="text-left text-[13px] text-muted">
+                  <th scope="col" className="pb-3 font-normal">Time</th>
+                  <th scope="col" className="pb-3 font-normal">Project</th>
+                  <th scope="col" className="pb-3 font-normal">Request</th>
+                  <th scope="col" className="pb-3 font-normal">Result</th>
+                  <th scope="col" className="pb-3 text-right font-normal">Took</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.logs.map((l) => (
+                  <tr key={l.id} className="border-t border-white/[0.07] align-top">
+                    <td className="py-3 pr-4 text-muted">{logTime(l.createdAt)}</td>
+                    <td className="py-3 pr-4">{l.project}</td>
+                    <td className="py-3 pr-4 font-mono text-[13px]">{l.tool ?? l.method}</td>
+                    <td className="py-3 pr-4">
+                      <span className="font-medium">{l.status === 'ok' ? 'OK' : l.status.replace(/_/g, ' ')}</span>
+                      <span className="ml-2 text-xs text-muted">{l.httpStatus}</span>
+                      {l.error && <span className="mt-0.5 block max-w-[320px] truncate text-xs text-muted" title={l.error}>{l.error}</span>}
+                    </td>
+                    <td className="py-3 text-right font-mono text-[13px] text-muted">{l.durationMs} ms</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </Card>
 
       <Card>
