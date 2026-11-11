@@ -248,3 +248,14 @@ html.lenis body {
     opacity: 1;
   }
 }
+
+/* Dashboard backdrop: the landing footer gradient, slowly drifting. */
+@keyframes aiz-drift-a { from { transform: translate3d(0, 0, 0) scale(1); } to { transform: translate3d(-7%, -6%, 0) scale(1.12); } }
+@keyframes aiz-drift-b { from { transform: translate3d(0, 0, 0) scale(1.05); } to { transform: translate3d(9%, -8%, 0) scale(0.92); } }
+@keyframes aiz-drift-c { from { transform: translate3d(-22%, 0, 0); opacity: 0.55; } to { transform: translate3d(22%, -4%, 0); opacity: 1; } }
+.aiz-drift-a { animation: aiz-drift-a 16s ease-in-out infinite alternate; }
+.aiz-drift-b { animation: aiz-drift-b 21s ease-in-out infinite alternate; }
+.aiz-drift-c { animation: aiz-drift-c 26s ease-in-out infinite alternate; }
+@media (prefers-reduced-motion: reduce) {
+  .aiz-drift-a, .aiz-drift-b, .aiz-drift-c { animation: none; }
+}
