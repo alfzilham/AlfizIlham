@@ -48,7 +48,7 @@ export default async function CertificatesPage() {
             <Kpi label="Total views" value={compact(views)} icon={<Eye />} />
           </div>
           {certificates.length > 0 && (
-            <div className="grid gap-4 sm:gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
+            <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
               <Card>
                 <CardHead title="Views per certificate" subtitle="Top 7 published" />
                 {top.length ? (
