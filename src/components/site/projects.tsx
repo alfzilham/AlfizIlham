@@ -1,7 +1,7 @@
 'use client';
 
 import { DIST, DUR_IN, DUR_OUT, EASE, MOTION_ENABLED, VIEWPORT } from '@/lib/motion';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowUpRight, ExternalLink, ImageIcon } from 'lucide-react';
 import { GithubIcon } from '@/components/brand-icons';
@@ -54,17 +54,35 @@ function GoButton({ p, onOpen }: { p: PublicProject; onOpen: () => void }) {
   );
 }
 
-function Preview({ p, onOpen, className }: { p: PublicProject; onOpen: () => void; className: string }) {
+function Preview({
+  p,
+  onOpen,
+  className,
+  natural,
+  btnRef,
+}: {
+  p: PublicProject;
+  onOpen: () => void;
+  className: string;
+  /** Show the image at its own aspect ratio (full card width, natural height) instead of cropping it into a fixed box. */
+  natural?: boolean;
+  btnRef?: React.Ref<HTMLButtonElement>;
+}) {
   return (
     <button
+      ref={btnRef}
       type="button"
       onClick={onOpen}
       aria-label={`View details of ${p.title}`}
-      className={cn('relative flex cursor-zoom-in items-center justify-center overflow-hidden border-[1.5px] border-bg/20 bg-[#d6d3ce]', className)}
+      className={cn(
+        'flex cursor-zoom-in items-center justify-center overflow-hidden border-[1.5px] border-bg/20 bg-[#d6d3ce]',
+        natural && !p.imageUrl && 'min-h-[244px]',
+        className,
+      )}
     >
       {p.imageUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={p.imageUrl} alt="" loading="lazy" className="absolute inset-0 size-full max-w-none object-cover object-top" />
+        <img src={p.imageUrl} alt="" loading="lazy" className={natural ? 'block h-auto w-full' : 'size-full object-cover'} />
       ) : (
         <span className="flex flex-col items-center gap-2 text-bg/70">
           <ImageIcon className="size-6" aria-hidden="true" />
@@ -77,6 +95,23 @@ function Preview({ p, onOpen, className }: { p: PublicProject; onOpen: () => voi
 
 function ProjectCard({ p, n, compact, onOpen }: { p: PublicProject; n: number; compact?: boolean; onOpen: () => void }) {
   const num = String(n).padStart(2, '0');
+  const cell = useRef<HTMLDivElement>(null);
+  const preview = useRef<HTMLButtonElement>(null);
+
+  // The hover state opens the preview to the image's own height, so measure it and hand it to the CSS.
+  useEffect(() => {
+    const el = preview.current;
+    const host = cell.current;
+    if (!el || !host) return;
+    const measure = () => {
+      if (el.offsetHeight > 0) host.style.setProperty('--pj-h', `${el.offsetHeight}px`);
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [compact, p.imageUrl]);
+
   const body = (
     <>
       <h3
@@ -106,7 +141,7 @@ function ProjectCard({ p, n, compact, onOpen }: { p: PublicProject; n: number; c
   }
 
   return (
-    <div className="pj-cell relative flow-root">
+    <div ref={cell} className="pj-cell relative flow-root">
       <article className="pj relative flex flex-col overflow-hidden rounded-[28px] bg-fg px-6 pt-6 text-bg">
         <Notch />
         <GoButton p={p} onOpen={onOpen} />
@@ -114,7 +149,7 @@ function ProjectCard({ p, n, compact, onOpen }: { p: PublicProject; n: number; c
           {num}
         </div>
         <div className="pj-zone relative z-[1] mt-3">
-          <Preview p={p} onOpen={onOpen} className="pj-img absolute inset-x-0 bottom-0 h-full rounded-t-2xl border-b-0" />
+          <Preview p={p} onOpen={onOpen} natural btnRef={preview} className="pj-img absolute inset-x-0 bottom-0 rounded-t-2xl border-b-0" />
         </div>
         <div className="relative z-[3] -mx-6 flex flex-col gap-3 bg-fg px-6 pt-5 pb-6">{body}</div>
       </article>
