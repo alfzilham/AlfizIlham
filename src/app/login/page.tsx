@@ -5,7 +5,8 @@ import { LoginForm } from './login-form';
 
 export const metadata: Metadata = { title: 'Sign in', robots: { index: false, follow: false } };
 
-export default function LoginPage() {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ expired?: string }> }) {
+  const { expired } = await searchParams;
   return (
     <main className="relative isolate grid min-h-dvh gap-4 p-3 sm:p-4 lg:grid-cols-[1.15fr_1fr]">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
@@ -38,6 +39,11 @@ export default function LoginPage() {
             <h2 className="font-display text-3xl font-bold">Sign in</h2>
             <p className="text-sm text-muted">Dashboard access for the site owner.</p>
           </div>
+          {expired === '1' && (
+            <p role="status" className="mb-6 rounded-xl bg-warn/10 px-4 py-3 text-sm text-warn">
+              Your session ended. Sign in again to continue.
+            </p>
+          )}
           <LoginForm />
         </div>
       </section>
