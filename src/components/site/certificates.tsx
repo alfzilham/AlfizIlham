@@ -9,7 +9,7 @@ import { LinkButton } from '@/components/ui/button';
 import { trackView } from '@/app/(site)/actions';
 import { Heading, Section } from './primitives';
 
-export type PublicCertificate = { id: string; title: string; issuer: string; fileUrl: string; fileType: string; category: string };
+export type PublicCertificate = { id: string; title: string; issuer: string; fileUrl: string; fileType: string; category: string; credentialId: string | null };
 
 const PAGE = 8;
 
@@ -107,7 +107,7 @@ export function Certificates({ certificates }: { certificates: PublicCertificate
         </div>
       )}
 
-      <Modal open={Boolean(open)} onClose={() => setOpen(null)} title={open?.title ?? ''} description={open ? `${open.issuer}, ${open.category}` : undefined} size="xl">
+      <Modal open={Boolean(open)} onClose={() => setOpen(null)} title={open?.title ?? ''} description={open ? `${open.issuer}, ${open.category}${open.credentialId ? `, Credential ID ${open.credentialId}` : ''}` : undefined} size="xl">
         {open &&
           (open.fileType === 'image' ? (
             // eslint-disable-next-line @next/next/no-img-element
