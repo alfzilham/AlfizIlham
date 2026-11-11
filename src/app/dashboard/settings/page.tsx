@@ -13,9 +13,10 @@ export const metadata = { title: 'Settings' };
 export default async function SettingsPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
   const { tab: t } = await searchParams;
   const tab: Tab = TAB_IDS.includes(t as Tab) ? (t as Tab) : 'profile';
-  const [settings, keys] = await Promise.all([
+  const [settings, keys, logs] = await Promise.all([
     getSettings(),
     tab === 'integrations' ? db.apiKey.findMany({ orderBy: { createdAt: 'desc' } }) : Promise.resolve([]),
+    tab === 'integrations' ? db.mcpLog.findMany({ orderBy: { createdAt: 'desc' }, take: 20 }) : Promise.resolve([]),
   ]);
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || `https://${settings.site.domain}`).replace(/\/$/, '');
 
@@ -34,6 +35,17 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
             createdAt: k.createdAt.toISOString(),
             lastUsedAt: k.lastUsedAt?.toISOString() ?? null,
             revoked: Boolean(k.revokedAt),
+          })),
+          logs: logs.map((l) => ({
+            id: l.id,
+            project: l.project,
+            method: l.method,
+            tool: l.tool,
+            status: l.status,
+            httpStatus: l.httpStatus,
+            durationMs: l.durationMs,
+            error: l.error,
+            createdAt: l.createdAt.toISOString(),
           })),
           ga: { connected: gaConfigured(), propertyId: process.env.GA_PROPERTY_ID ?? '', measurementId: process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ?? '' },
           email: {
