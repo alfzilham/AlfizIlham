@@ -13,6 +13,7 @@ import { ExportLinks } from './export-links';
 import { Pager, SearchBox } from './list-controls';
 import { useFeedback } from './feedback';
 import { deleteTestimonial, setTestimonialStatus } from '@/app/dashboard/actions';
+import Image from 'next/image';
 import { relativeDay } from '@/lib/utils';
 
 type Status = 'PENDING' | 'APPROVED' | 'REJECTED';
@@ -26,6 +27,7 @@ export type TestimonialRow = {
   project: string | null;
   source: string;
   status: Status;
+  avatarUrl: string | null;
   createdAt: string;
 };
 type Filter = 'all' | Status;
@@ -223,9 +225,13 @@ export function TestimonialManager({
                       <motion.tr key={t.id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="border-t border-white/[0.07] align-middle">
                         <td className="py-3 pr-4">
                           <div className="flex min-w-0 items-center gap-3.5">
-                            <Thumb>
-                              <User />
-                            </Thumb>
+                            {t.avatarUrl ? (
+                              <Image src={t.avatarUrl} alt="" width={80} height={80} unoptimized referrerPolicy="no-referrer" className="size-10 flex-none rounded-full object-cover" />
+                            ) : (
+                              <Thumb>
+                                <User />
+                              </Thumb>
+                            )}
                             <span className="min-w-0">
                               <span className="block truncate font-medium">{t.name}</span>
                               <span className="mt-0.5 block truncate text-xs text-muted">{who(t)}</span>
