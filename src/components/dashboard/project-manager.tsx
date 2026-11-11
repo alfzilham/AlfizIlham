@@ -148,7 +148,7 @@ export function ProjectManager({ projects, stats, initialOpen }: { projects: Pro
                   {rows.map((p) => (
                     <motion.tr key={p.id} layout className="border-t border-white/[0.07]">
                       <td className="w-full max-w-0 py-3 pr-4">
-                        <button type="button" onClick={() => setEditing(p)} className="flex min-w-0 items-center gap-3.5 text-left">
+                        <button type="button" onClick={() => setEditing(p)} className="flex w-full min-w-0 items-center gap-3.5 text-left">
                           <Thumb>{p.imageUrl ? <img src={p.imageUrl} alt="" className="size-full object-cover" /> : <ImageIcon />}</Thumb>
                           <span className="min-w-0">
                             <span className="block truncate font-medium hover:underline">{p.title}</span>
