@@ -57,6 +57,23 @@ export const feedbackSchema = z.object({
   message: z.string().trim().min(5).max(1500),
   rating: z.number().int().min(1).max(5),
   project: z.string().trim().max(120).optional(),
+  /** Optional public https URL of the client photo. Empty string counts as none. */
+  avatar_url: z.preprocess(
+    (v) => (v === '' || v === null ? undefined : v),
+    z
+      .string()
+      .trim()
+      .max(500)
+      .refine((v) => {
+        try {
+          const u = new URL(v);
+          return u.protocol === 'https:' && !u.username && !u.password;
+        } catch {
+          return false;
+        }
+      }, 'Must be a public https URL')
+      .optional(),
+  ),
   /** Optional. Sending the same key twice returns the first result instead of a duplicate. */
   idempotency_key: z.string().trim().min(1).max(80).optional(),
 });
