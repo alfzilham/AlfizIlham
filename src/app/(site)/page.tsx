@@ -23,7 +23,7 @@ async function loadContent() {
       db.project.findMany({
         where: { status: 'PUBLISHED' },
         orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
-        select: { id: true, title: true, description: true, techStack: true, liveUrl: true, githubUrl: true, imageUrl: true },
+        select: { id: true, title: true, description: true, techStack: true, liveUrl: true, githubUrl: true, imageUrl: true, iconUrl: true },
       }),
       db.certificate.findMany({
         where: { status: 'PUBLISHED' },
