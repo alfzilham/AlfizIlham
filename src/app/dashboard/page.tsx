@@ -65,7 +65,7 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
         </Card>
       </div>
 
-      <div className="grid gap-4 sm:gap-6 xl:grid-cols-2">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
         <Card>
           <CardHead
             title="Live visitors"
@@ -120,7 +120,7 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
         </Card>
       </div>
 
-      <div className="grid gap-4 sm:gap-6 xl:grid-cols-2">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
         <section className="acc-surface flex min-h-[260px] flex-col justify-between overflow-hidden rounded-[24px] p-6">
           <div>
             <h2 className="max-w-[14ch] font-display text-[28px] leading-tight font-bold text-white">
