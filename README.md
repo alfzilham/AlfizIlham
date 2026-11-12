@@ -46,7 +46,7 @@ public/files          Alfiz_Ilham_CV.pdf and Alfiz_Ilham_Resume.pdf
 2. In Vercel, choose Add New Project and import the repository. The framework is detected automatically as Next.js.
 3. Add every variable from `.env` under Settings > Environment Variables (Production and Preview).
 4. Deploy. The `vercel-build` script runs `prisma generate`, `prisma db push`, then `next build`, so the database schema stays in sync on every deploy. If a schema change would delete data, the build stops with an error and nothing is deleted.
-5. Set `NEXT_PUBLIC_SITE_URL=https://alfizilham.vercel.app`. To use a custom domain, add it under Settings > Domains and update this value.
+5. Set `NEXT_PUBLIC_SITE_URL=https://alfizilham.my.id`. The domain must also be added under Settings > Domains in Vercel.
 
 ## Environment
 
@@ -77,7 +77,7 @@ Every integration is optional on the first run. If a value is missing, the dashb
 ```json
 [
   {
-    "AllowedOrigins": ["https://alfizilham.vercel.app", "http://localhost:3000"],
+    "AllowedOrigins": ["https://alfizilham.my.id", "http://localhost:3000"],
     "AllowedMethods": ["PUT", "GET"],
     "AllowedHeaders": ["Content-Type"],
     "MaxAgeSeconds": 3600
@@ -127,14 +127,14 @@ Note: the monthly quota on the EmailJS free plan is limited. If sending fails, t
 
 1. Open Dashboard > Settings > Integrations, then click Create API key for each project (for example: PusakaPosters).
 2. Save the key that is shown. It appears only once, and the database stores only its hash.
-3. In that project, connect the MCP server with the endpoint `https://alfizilham.vercel.app/api/mcp` and the header `Authorization: Bearer <key>`.
+3. In that project, connect the MCP server with the endpoint `https://alfizilham.my.id/api/mcp` and the header `Authorization: Bearer <key>`.
 4. Call the `submit_feedback` tool with the arguments `name`, `message`, `rating` (1 to 5), and optionally `role`, `company`, `project`.
 5. Testimonials arrive with the Pending status. The Testimonials section on the site appears once at least one testimonial is approved.
 
 Example of a direct call over HTTP:
 
 ```bash
-curl -X POST https://alfizilham.vercel.app/api/mcp \
+curl -X POST https://alfizilham.my.id/api/mcp \
   -H "Authorization: Bearer mcp_live_xxx" \
   -H "Content-Type: application/json" \
   -H "Accept: application/json, text/event-stream" \
