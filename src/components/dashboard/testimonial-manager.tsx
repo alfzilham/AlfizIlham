@@ -209,11 +209,11 @@ export function TestimonialManager({
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-left text-[13px] text-muted">
-                    <th scope="col" className="pb-3 font-normal">Client</th>
-                    <th scope="col" className="hidden pb-3 font-normal lg:table-cell">Message</th>
-                    <th scope="col" className="pb-3 font-normal">Source</th>
-                    <th scope="col" className="pb-3 font-normal">Rating</th>
-                    <th scope="col" className="pb-3 font-normal">Status</th>
+                    <th scope="col" className="w-full pb-3 pr-4 font-normal">Client</th>
+                    <th scope="col" className="hidden pb-3 pr-4 font-normal lg:table-cell">Message</th>
+                    <th scope="col" className="pb-3 pr-4 font-normal">Source</th>
+                    <th scope="col" className="pb-3 pr-4 font-normal">Rating</th>
+                    <th scope="col" className="pb-3 pr-4 font-normal">Status</th>
                     <th scope="col" className="pb-3 font-normal">
                       <span className="sr-only">Actions</span>
                     </th>
@@ -223,7 +223,7 @@ export function TestimonialManager({
                   <AnimatePresence initial={false}>
                     {rows.map((t) => (
                       <motion.tr key={t.id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="border-t border-white/[0.07] align-middle">
-                        <td className="py-3 pr-4">
+                        <td className="w-full max-w-0 py-3 pr-4">
                           <div className="flex min-w-0 items-center gap-3.5">
                             {t.avatarUrl ? (
                               <Image src={t.avatarUrl} alt="" width={80} height={80} unoptimized referrerPolicy="no-referrer" className="size-10 flex-none rounded-full object-cover" />
@@ -233,8 +233,8 @@ export function TestimonialManager({
                               </Thumb>
                             )}
                             <span className="min-w-0">
-                              <span className="block truncate font-medium">{t.name}</span>
-                              <span className="mt-0.5 block truncate text-xs text-muted">{who(t)}</span>
+                              <span className="block truncate font-medium" title={t.name}>{t.name}</span>
+                              <span className="mt-0.5 block truncate text-xs text-muted" title={who(t)}>{who(t)}</span>
                             </span>
                           </div>
                         </td>
