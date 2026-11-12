@@ -116,11 +116,11 @@ export function CertificateManager({ certificates, categories, stats }: { certif
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-left text-[13px] text-muted">
-                    <th scope="col" className="pb-3 font-normal">Certificate</th>
-                    <th scope="col" className="hidden pb-3 font-normal lg:table-cell">Category</th>
-                    <th scope="col" className="pb-3 font-normal">Status</th>
-                    <th scope="col" className="pb-3 font-normal">Views</th>
-                    <th scope="col" className="hidden pb-3 font-normal lg:table-cell">Updated</th>
+                    <th scope="col" className="w-full pb-3 pr-4 font-normal">Certificate</th>
+                    <th scope="col" className="hidden pb-3 pr-4 font-normal lg:table-cell">Category</th>
+                    <th scope="col" className="pb-3 pr-4 font-normal">Status</th>
+                    <th scope="col" className="pb-3 pr-4 font-normal">Views</th>
+                    <th scope="col" className="hidden pb-3 pr-4 font-normal lg:table-cell">Updated</th>
                     <th scope="col" className="pb-3 font-normal">
                       <span className="sr-only">Actions</span>
                     </th>
@@ -129,12 +129,12 @@ export function CertificateManager({ certificates, categories, stats }: { certif
                 <tbody>
                   {rows.map((c) => (
                     <motion.tr key={c.id} layout className="border-t border-white/[0.07]">
-                      <td className="py-3 pr-4">
-                        <button type="button" onClick={() => setEditing(c)} className="flex min-w-0 items-center gap-3.5 text-left">
+                      <td className="w-full max-w-0 py-3 pr-4">
+                        <button type="button" onClick={() => setEditing(c)} className="flex w-full min-w-0 items-center gap-3.5 text-left">
                           <Thumb>{c.fileType === 'image' ? <img src={c.fileUrl} alt="" className="size-full object-cover" /> : <FileText />}</Thumb>
                           <span className="min-w-0">
                             <span className="flex min-w-0 items-center gap-1.5">
-                              <span className="truncate font-medium hover:underline">{c.title}</span>
+                              <span className="truncate font-medium hover:underline" title={c.title}>{c.title}</span>
                               {c.pinned && (
                                 <>
                                   <Pin className="size-3.5 shrink-0 text-accent" aria-hidden="true" />
@@ -142,7 +142,7 @@ export function CertificateManager({ certificates, categories, stats }: { certif
                                 </>
                               )}
                             </span>
-                            <span className="mt-0.5 block truncate text-xs text-muted">{c.issuer}</span>
+                            <span className="mt-0.5 block truncate text-xs text-muted" title={c.issuer}>{c.issuer}</span>
                           </span>
                         </button>
                       </td>
