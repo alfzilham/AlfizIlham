@@ -18,7 +18,7 @@ The personal portfolio of Alfiz Ilham, a Computer Engineering student and freela
 - **Public site:** a single scrolling page. About, skills, projects, services, certificates, testimonials, FAQ, and a contact form.
 - **Dashboard:** manage projects, certificates, testimonials, and messages. View analytics. Reply to people by email. Issue API keys so other projects can send testimonials through an MCP endpoint.
 
-Public profile links used in the site: GitHub `alfzilham`, LinkedIn `alfiz-ilham093a2`, contact email `alfizilham@gmail.com`. The live site is `https://alfizilham.vercel.app`.
+Public profile links used in the site: GitHub `alfzilham`, LinkedIn `alfiz-ilham093a2`, contact email `alfizilham@gmail.com`. The live site is `https://alfizilham.my.id`.
 
 ## 2. Stack at a glance
 

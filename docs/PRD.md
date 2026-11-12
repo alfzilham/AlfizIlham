@@ -7,7 +7,7 @@ Product requirements for the Alfiz Ilham portfolio and admin dashboard.
 | Product | Personal portfolio website with an admin dashboard |
 | Owner | Alfiz Ilham |
 | Status | v1.0, ready for first deploy |
-| Live URL | https://alfizilham.vercel.app |
+| Live URL | https://alfizilham.my.id |
 | Related | `SPEC.md` (exact behavior), `ARCHITECTURE.md`, `DESIGN.md`, `WORKFLOW.md` |
 
 ## 1. Summary
